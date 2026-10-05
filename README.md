@@ -67,8 +67,10 @@ Moving to a database (Supabase, per the implementation plan) only means changing
 
 ## Deploying
 
-`vercel.json` (Vercel) and `public/_redirects` (Netlify) send every route to `index.html`,
-so shared links work on refresh.
+Hosted on Netlify. `netlify.toml` sets the build, sends every route to `index.html` (so
+shared links work on refresh), adds security headers, and deploys the email function in
+`netlify/functions/send-gift.mjs` at `/api/send-gift`. Database setup: run the SQL files in
+`supabase/migrations` in order. Environment variables are listed in `.env.example`.
 
 ## Logos
 

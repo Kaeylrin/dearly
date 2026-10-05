@@ -6,7 +6,9 @@
  * limited number of times, and there are per-IP, per-recipient and site-wide
  * daily limits, so the endpoint can't be used to spam.
  *
- * Env (Vercel project settings):
+ * Runs as a Netlify Function, served at /api/send-gift (see `config` below).
+ *
+ * Env (Netlify > Site configuration > Environment variables):
  *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY,
  *   MAIL_FROM        e.g. "Dearly <gifts@yourdomain.com>" (verified in Resend)
  *   PUBLIC_SITE_URL  optional, e.g. https://dearly.app (defaults to the request host)
@@ -34,13 +36,11 @@ const clean = (v, max) =>
 
 function siteUrl(req) {
   if (process.env.PUBLIC_SITE_URL) return process.env.PUBLIC_SITE_URL.replace(/\/+$/, '')
-  const host = req.headers['x-forwarded-host'] || req.headers.host
-  const proto = req.headers['x-forwarded-proto'] || 'https'
-  return `${proto}://${host}`
+  return new URL(req.url).origin
 }
 
-// Vercel sets x-real-ip from the connection; clients can't forge it.
-const clientIp = (req) => String(req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null
+const json = (status, body, headers = {}) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers } })
 
 const since = (ms) => new Date(Date.now() - ms).toISOString()
 
@@ -94,47 +94,50 @@ function emailHtml({ fromName, note, url }) {
 </body></html>`
 }
 
-export default async function handler(req, res) {
+export const config = { path: '/api/send-gift' }
+
+export default async function handler(req, context) {
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST')
-    return res.status(405).json({ error: 'Method not allowed.' })
+    return json(405, { error: 'Method not allowed.' }, { Allow: 'POST' })
   }
   const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'RESEND_API_KEY', 'MAIL_FROM'].filter((k) => !process.env[k])
   if (missing.length) {
     console.error('send-gift: missing env', missing)
-    return res.status(500).json({ error: 'Email isn’t set up yet. Copy the link and send it yourself for now.' })
+    return json(500, { error: 'Email isn’t set up yet. Copy the link and send it yourself for now.' })
   }
 
   // Browsers always send Origin on cross-site POSTs; reject other sites calling this.
-  const origin = req.headers.origin
-  if (origin && origin !== siteUrl(req)) return res.status(403).json({ error: 'Not allowed.' })
+  const origin = req.headers.get('origin')
+  if (origin && origin !== siteUrl(req)) return json(403, { error: 'Not allowed.' })
 
   let body
   try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}
+    body = JSON.parse((await req.text()) || '{}')
+    if (!body || typeof body !== 'object') throw new Error('not an object')
   } catch {
-    return res.status(400).json({ error: 'Bad request.' })
+    return json(400, { error: 'Bad request.' })
   }
   // Honeypot: a hidden field people never fill in. Pretend it worked.
-  if (body.website) return res.status(200).json({ ok: true })
+  if (body.website) return json(200, { ok: true })
 
-  const ip = clientIp(req)
+  // Netlify's edge supplies the real client IP; clients can't forge it.
+  const ip = context?.ip || null
   const id = clean(body.id, 10)
   const token = clean(body.token, 36)
   const to = clean(body.to, 254).toLowerCase()
   const fromName = clean(body.fromName, 60)
   const note = clean(body.note, 200)
 
-  if (!ID_RE.test(id) || !TOKEN_RE.test(token)) return res.status(400).json({ error: 'This gift couldn’t be found.' })
-  if (!EMAIL_RE.test(to)) return res.status(400).json({ error: 'That email address doesn’t look right.' })
-  if (!fromName) return res.status(400).json({ error: 'Add your name so she knows who it’s from.' })
+  if (!ID_RE.test(id) || !TOKEN_RE.test(token)) return json(400, { error: 'This gift couldn’t be found.' })
+  if (!EMAIL_RE.test(to)) return json(400, { error: 'That email address doesn’t look right.' })
+  if (!fromName) return json(400, { error: 'Add your name so she knows who it’s from.' })
 
   try {
     const rows = await db(`gifts?id=eq.${id}&edit_token=eq.${token}&select=id,type,email_count`)
     const gift = rows?.[0]
-    if (!gift) return res.status(404).json({ error: 'This gift couldn’t be found.' })
+    if (!gift) return json(404, { error: 'This gift couldn’t be found.' })
     if (gift.email_count >= MAX_EMAILS_PER_GIFT) {
-      return res.status(429).json({ error: 'This gift has been emailed a few times already. Copy the link and send it yourself.' })
+      return json(429, { error: 'This gift has been emailed a few times already. Copy the link and send it yourself.' })
     }
 
     const [byIp, byRecipient, bySite] = await Promise.all([
@@ -143,7 +146,7 @@ export default async function handler(req, res) {
       count(`email_log?created_at=gt.${since(86400e3)}&select=id`),
     ])
     if (byIp >= MAX_PER_IP_HOUR || byRecipient >= MAX_PER_RECIPIENT_DAY || bySite >= MAX_SITE_DAY) {
-      return res.status(429).json({ error: 'Too many emails sent for now. Copy the link and send it yourself, or try again later.' })
+      return json(429, { error: 'Too many emails sent for now. Copy the link and send it yourself, or try again later.' })
     }
 
     const url = `${siteUrl(req)}/${gift.type}/${gift.id}`
@@ -157,7 +160,7 @@ export default async function handler(req, res) {
     })
     if (!sent.ok) {
       console.error('send-gift: resend', sent.status, await sent.text())
-      return res.status(502).json({ error: 'The email couldn’t be sent. Please try again in a moment.' })
+      return json(502, { error: 'The email couldn’t be sent. Please try again in a moment.' })
     }
 
     await db('email_log', {
@@ -170,9 +173,9 @@ export default async function handler(req, res) {
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ recipient_email: to, emailed_at: new Date().toISOString(), email_count: gift.email_count + 1 }),
     })
-    return res.status(200).json({ ok: true })
+    return json(200, { ok: true })
   } catch (err) {
     console.error('send-gift', err)
-    return res.status(500).json({ error: 'Something went wrong sending the email. Please try again.' })
+    return json(500, { error: 'Something went wrong sending the email. Please try again.' })
   }
 }

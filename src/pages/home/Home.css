@@ -4,8 +4,169 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   align-items: center;
   gap: clamp(32px, 6vw, 80px);
-  padding-top: clamp(48px, 11vh, 120px);
-  padding-bottom: clamp(64px, 12vh, 132px);
+  /* Room above and below the copy for the floating cards. */
+  padding-top: clamp(100px, 14vh, 140px);
+  padding-bottom: clamp(100px, 14vh, 150px);
+  position: relative;
+  overflow-x: clip;
+}
+
+.hero-copy,
+.hero-art {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- floating cards (corners of the hero) ---------- */
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--r, 0deg));
+  }
+  50% {
+    transform: translateY(-10px) rotate(var(--r, 0deg));
+  }
+}
+
+@keyframes floater-in {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+
+.floaters {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.floater {
+  position: absolute;
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  animation:
+    floater-in 0.8s var(--ease) both,
+    bob var(--t, 6s) ease-in-out infinite;
+  animation-delay: var(--in, 0.4s), var(--d, 0s);
+}
+
+html:not(.is-ready) .floater {
+  animation-play-state: paused;
+}
+
+.floater-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.floater-label {
+  color: var(--ink-faint);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.floater-time {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.floater-bouquet {
+  display: block;
+  width: 64px;
+}
+
+.floater-bouquet .mini-bouquet {
+  width: 64px;
+  margin-block: -8px -4px;
+}
+
+.floater-heart {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
+.floater-check svg {
+  width: 12px;
+  height: 12px;
+}
+
+.floater-check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--good-soft);
+  color: var(--good);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.floater-tl {
+  --r: -3deg;
+  --t: 6.5s;
+  --in: 0.4s;
+  top: 4px;
+  left: calc(var(--gutter) - 12px);
+}
+
+.floater-tr {
+  --r: 4deg;
+  --t: 7.5s;
+  --d: -2s;
+  --in: 0.5s;
+  top: 20px;
+  right: calc(var(--gutter) + 8px);
+}
+
+.floater-bl {
+  --r: 2deg;
+  --t: 7s;
+  --d: -3.5s;
+  --in: 0.6s;
+  bottom: 18px;
+  left: calc(var(--gutter) + 26%);
+}
+
+.floater-br {
+  --r: -2deg;
+  --t: 6s;
+  --d: -1.2s;
+  --in: 0.7s;
+  bottom: 30px;
+  right: calc(var(--gutter) - 8px);
+}
+
+/* Not enough room around the copy on small screens. */
+@media (max-width: 900px) {
+  .floater-tl,
+  .floater-bl {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .floaters {
+    display: none;
+  }
 }
 
 .hero-title {

@@ -14,6 +14,28 @@ export default function Home() {
   return (
     <>
       <section className="hero wrap" aria-labelledby="hero-title">
+        {/* Floating cards in the hero's corners, each a glimpse of something Dearly makes. */}
+        <div className="floaters" aria-hidden="true">
+          <div className="floater floater-tl">
+            <span className="floater-label">Until our day</span>
+            <span className="floater-time">12:04:37</span>
+          </div>
+          <div className="floater floater-tr">
+            <span className="floater-bouquet">{previews.bouquet}</span>
+          </div>
+          <div className="floater floater-bl floater-pill">
+            <svg className="floater-heart" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 14s-5.5-3.4-5.5-7.4A3 3 0 0 1 8 4.7a3 3 0 0 1 5.5 1.9C13.5 10.6 8 14 8 14z" />
+            </svg> 31 reasons why
+          </div>
+          <div className="floater floater-br floater-pill">
+            <span className="floater-check">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3.5 8.5l3 3 6-7" />
+              </svg>
+            </span> Sent to her inbox
+          </div>
+        </div>
         <div className="hero-copy rise">
           <h1 id="hero-title" className="hero-title">
             When you don’t know <em className="mark">what to give her.</em>
