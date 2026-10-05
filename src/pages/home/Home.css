@@ -103,21 +103,20 @@ html:not(.is-ready) .floater {
   color: var(--accent);
 }
 
-.floater-check svg {
-  width: 12px;
-  height: 12px;
-}
-
-.floater-check {
+.floater-mail {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  background: var(--good-soft);
-  color: var(--good);
-  font-size: 0.72rem;
-  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.floater-mail svg {
+  width: 16px;
+  height: 16px;
 }
 
 .floater-tl {

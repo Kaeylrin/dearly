@@ -29,9 +29,16 @@ export default function Home() {
             </svg> 31 reasons why
           </div>
           <div className="floater floater-br floater-pill">
-            <span className="floater-check">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3.5 8.5l3 3 6-7" />
+            <span className="floater-mail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
+                <rect x="3" y="5.5" width="18" height="13" rx="2" />
+                <path d="M3.6 6.6l8.4 6.6 8.4-6.6" />
+                <path
+                  d="M12 16.6s-2.6-1.6-2.6-3.5A1.35 1.35 0 0 1 12 12.4a1.35 1.35 0 0 1 2.6.7c0 1.9-2.6 3.5-2.6 3.5z"
+                  fill="currentColor"
+                  stroke="var(--paper)"
+                  strokeWidth="1"
+                />
               </svg>
             </span> Sent to her inbox
           </div>
