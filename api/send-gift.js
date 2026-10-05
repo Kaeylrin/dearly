@@ -6,9 +6,9 @@
  * limited number of times, and there are per-IP, per-recipient and site-wide
  * daily limits, so the endpoint can't be used to spam.
  *
- * Runs as a Netlify Function, served at /api/send-gift (see `config` below).
+ * Runs as a Vercel Function (Web Request/Response API), at /api/send-gift.
  *
- * Env (Netlify > Site configuration > Environment variables):
+ * Env (Vercel > Project > Settings > Environment Variables):
  *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY,
  *   MAIL_FROM        e.g. "Dearly <gifts@yourdomain.com>" (verified in Resend)
  *   PUBLIC_SITE_URL  optional, e.g. https://dearly.app (defaults to the request host)
@@ -94,9 +94,8 @@ function emailHtml({ fromName, note, url }) {
 </body></html>`
 }
 
-export const config = { path: '/api/send-gift' }
-
-export default async function handler(req, context) {
+/* Only POST is exported; Vercel answers other methods with 405. */
+export async function POST(req) {
   if (req.method !== 'POST') {
     return json(405, { error: 'Method not allowed.' }, { Allow: 'POST' })
   }
@@ -120,8 +119,8 @@ export default async function handler(req, context) {
   // Honeypot: a hidden field people never fill in. Pretend it worked.
   if (body.website) return json(200, { ok: true })
 
-  // Netlify's edge supplies the real client IP; clients can't forge it.
-  const ip = context?.ip || null
+  // Vercel's edge sets x-real-ip from the connection and overwrites any client-sent value.
+  const ip = (req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null
   const id = clean(body.id, 10)
   const token = clean(body.token, 36)
   const to = clean(body.to, 254).toLowerCase()
