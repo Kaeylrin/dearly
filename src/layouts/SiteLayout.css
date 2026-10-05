@@ -1,0 +1,12 @@
+#scroll-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 40px;
+  pointer-events: none;
+}
+
+.site-main {
+  padding-top: calc(96px + env(safe-area-inset-top, 0px));
+}

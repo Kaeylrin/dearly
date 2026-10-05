@@ -1,0 +1,33 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+}
+
+.logo-img {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+.logo-for-dark {
+  display: none;
+}
+
+:root[data-theme='dark'] .logo-for-light {
+  display: none;
+}
+
+:root[data-theme='dark'] .logo-for-dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .logo-for-light {
+    display: none;
+  }
+
+  :root:not([data-theme='light']) .logo-for-dark {
+    display: block;
+  }
+}

@@ -1,0 +1,35 @@
+/* Shared shell for every recipient view (and the preview step). */
+.gv {
+  width: 100%;
+  max-width: calc(640px + var(--gutter) * 2);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  animation: rise 0.8s var(--ease) both;
+}
+
+.preview-frame .gv {
+  padding-inline: clamp(16px, 4vw, 24px);
+}
+
+.gv-kicker {
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.gv-title {
+  margin-top: 10px;
+  font-size: clamp(1.9rem, 1.3rem + 2.6vw, 2.9rem);
+  text-align: center;
+}
+
+.gv-sign {
+  margin-top: 28px;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--accent);
+  font-size: 1.15rem;
+  text-align: center;
+}

@@ -1,0 +1,38 @@
+.gift-corner {
+  position: fixed;
+  z-index: 20;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+}
+
+.gift-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(72px + env(safe-area-inset-top, 0px));
+}
+
+.gift-footer {
+  display: flex;
+  justify-content: center;
+  padding: 48px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+}
+
+.gift-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s var(--ease);
+}
+
+.gift-footer-link:hover {
+  opacity: 1;
+}
+
+.gift-footer-logo {
+  height: 20px;
+}

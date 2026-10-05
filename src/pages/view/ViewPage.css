@@ -1,0 +1,20 @@
+.view-status {
+  flex: 1;
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 10vh var(--gutter);
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.view-missing h1 {
+  color: var(--ink);
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem);
+}
+
+.view-missing .text-link {
+  justify-self: center;
+}

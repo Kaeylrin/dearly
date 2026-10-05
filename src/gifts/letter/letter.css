@@ -1,0 +1,63 @@
+.gv-letter {
+  max-width: calc(620px + var(--gutter) * 2);
+}
+
+.letter-sheet {
+  position: relative;
+  padding: clamp(40px, 7vw, 64px) clamp(26px, 6vw, 60px) clamp(36px, 6vw, 56px);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+
+/* the strip of tape from the landing page mockup */
+.letter-sheet::before {
+  content: '';
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 78px;
+  height: 22px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.letter-to {
+  margin-bottom: 26px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.35rem;
+}
+
+.letter-body {
+  font-family: var(--serif);
+  font-size: clamp(1.04rem, 1rem + 0.2vw, 1.14rem);
+  line-height: 1.8;
+}
+
+.letter-body p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.letter-body p + p {
+  margin-top: 1.1em;
+}
+
+.letter-sign {
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+  margin-top: 40px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+}
+
+.letter-from {
+  color: var(--accent);
+  font-size: 1.25rem;
+}

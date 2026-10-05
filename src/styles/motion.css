@@ -1,0 +1,121 @@
+/*
+ * Motion: entrances, page transitions, scroll reveals.
+ * Everything here is decoration; with reduced motion the site works the same, just still.
+ */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.7s var(--ease) both;
+}
+
+/* Entrance animations wait until the splash has lifted, so they're actually seen. */
+html:not(.is-ready) .rise,
+html:not(.is-ready) .gv {
+  animation-play-state: paused;
+}
+
+/* ---------- page transitions (View Transitions API) ---------- */
+::view-transition-old(root) {
+  animation: vt-out 0.22s var(--ease) both;
+}
+
+::view-transition-new(root) {
+  animation: vt-in 0.42s var(--ease) both;
+}
+
+/* The nav keeps its own layer so it glides between states instead of fading. */
+::view-transition-group(site-nav) {
+  animation-duration: 0.42s;
+  animation-timing-function: var(--ease);
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Browsers without view transitions still get a soft entrance on each page. */
+html.no-vt .page {
+  animation: rise 0.45s var(--ease) both;
+}
+
+/* ---------- scroll reveal (see hooks/useReveal) ---------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.7s var(--ease),
+    transform 0.7s var(--ease);
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Lists reveal their items in a short cascade instead of all at once. */
+[data-reveal='stagger'] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal='stagger'] > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.6s var(--ease),
+    transform 0.6s var(--ease);
+}
+
+[data-reveal='stagger'] > .is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  [data-reveal],
+  [data-reveal] > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,251 @@
+.site-nav {
+  --nav-wide: 960px;
+  --nav-narrow: 760px;
+  position: fixed;
+  z-index: 50;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  padding-inline: var(--gutter);
+  pointer-events: none;
+}
+
+.nav-pill {
+  /* Own layer during page transitions, so it glides instead of fading. This sits on the
+     pill, not the wrapper: a view-transition-name on an ancestor would become the
+     backdrop root and leave the blur nothing to blur. */
+  view-transition-name: site-nav;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: var(--nav-wide);
+  margin-inline: auto;
+  padding: 10px 10px 10px 26px;
+  /* Translucent: the page shows through, softened by the blur so text stays readable. */
+  background: color-mix(in srgb, var(--paper) 62%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  border-radius: 999px;
+  transition:
+    max-width 0.5s var(--ease),
+    padding 0.5s var(--ease),
+    border-color 0.4s var(--ease),
+    box-shadow 0.4s var(--ease),
+    background-color 0.3s var(--ease);
+}
+
+.site-nav.is-scrolled .nav-pill {
+  max-width: var(--nav-narrow);
+  padding: 7px 7px 7px 20px;
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  border-color: color-mix(in srgb, var(--line) 85%, transparent);
+  box-shadow: var(--shadow-soft);
+}
+
+.nav-logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: auto;
+  padding: 4px 0;
+  border-radius: 6px;
+}
+
+.nav-logo .logo {
+  height: 30px;
+  transition: height 0.5s var(--ease);
+}
+
+.site-nav.is-scrolled .nav-logo .logo {
+  height: 26px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s var(--ease);
+}
+
+.nav-links a:hover,
+.nav-links a[aria-current='page'] {
+  color: var(--ink);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Icon buttons sit on the glass instead of punching a solid hole in it. */
+.nav-actions .icon-btn {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.nav-cta {
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.nav-menu-btn {
+  display: none;
+}
+
+.nav-menu-btn .bar {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.3s var(--ease);
+}
+
+.site-nav.is-open .bar-top {
+  transform: translateY(3px) rotate(45deg);
+}
+
+.site-nav.is-open .bar-bottom {
+  transform: translateY(-3px) rotate(-45deg);
+}
+
+/* ---------- mobile ---------- */
+.nav-menu {
+  pointer-events: auto;
+  max-width: var(--nav-wide);
+  max-height: calc(100dvh - 110px);
+  overflow-y: auto;
+  margin: 10px auto 0;
+  padding: 22px 24px 18px;
+  background: color-mix(in srgb, var(--paper) 84%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  animation: menu-in 0.32s var(--ease) both;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.nav-menu-label {
+  margin-bottom: 6px;
+}
+
+.nav-menu-gifts,
+.nav-menu-meta {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-menu-gifts a {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--serif);
+  font-size: 1.22rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.nav-menu-gifts li:last-child a {
+  border-bottom: 0;
+}
+
+.nav-menu-gifts a:active,
+.nav-menu-gifts a:hover {
+  color: var(--accent);
+}
+
+.nav-menu-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.nav-menu-meta a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+
+/* Without blur support, translucency would hurt legibility, so stay nearly solid. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav-pill,
+  .site-nav.is-scrolled .nav-pill,
+  .nav-menu {
+    background: color-mix(in srgb, var(--paper) 96%, transparent);
+  }
+}
+
+@media (max-width: 760px) {
+  .nav-links,
+  .nav-cta {
+    display: none;
+  }
+
+  .nav-menu-btn {
+    display: inline-flex;
+  }
+
+  .nav-pill {
+    padding: 8px 8px 8px 20px;
+  }
+
+  .site-nav.is-scrolled .nav-pill {
+    max-width: calc(100% - 20px);
+    padding: 6px 6px 6px 18px;
+  }
+
+  /* An open menu keeps the pill at full width so the two line up. */
+  .site-nav.is-open .nav-pill {
+    max-width: var(--nav-wide);
+    border-color: var(--line);
+  }
+
+  .nav-logo .logo {
+    height: 27px;
+  }
+
+  .site-nav.is-scrolled .nav-logo .logo {
+    height: 24px;
+  }
+}
+
+@media (min-width: 761px) {
+  .nav-menu {
+    display: none;
+  }
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Dearly</title>
+    <meta name="description" content="Make something meaningful in a few minutes, then send the link. No account, no app." />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Favicon follows the appearance: dark tile in dark mode, light tile in light mode.
+         The script below sets it before first paint; src/lib/theme.js keeps it in sync
+         with the in-site toggle and with system appearance changes. -->
+    <link id="favicon" rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-light-32.png" />
+    <link id="apple-icon" rel="apple-touch-icon" href="/icons/favicon-light-180.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Apply the saved theme and matching favicon before first paint.
+      ;(function () {
+        var root = document.documentElement
+        var saved = null
+        try {
+          saved = localStorage.getItem('dearly-theme')
+        } catch (e) {}
+        if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved)
+        var dark =
+          saved === 'dark' ||
+          (saved !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        var tone = dark ? 'dark' : 'light'
+        document.getElementById('favicon').href = '/icons/favicon-' + tone + '-32.png'
+        document.getElementById('apple-icon').href = '/icons/favicon-' + tone + '-180.png'
+      })()
+    </script>
+
+    <!-- First-load splash. Inline so it paints before the app's CSS and JS arrive;
+         src/lib/splash.js fades it out once the app and fonts are ready. -->
+    <style>
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 22px;
+        background: #faf4ee;
+        transition: opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0.5s;
+      }
+      #splash.is-leaving {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #splash img {
+        width: 132px;
+        height: auto;
+        animation: splash-in 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      }
+      #splash .for-dark {
+        display: none;
+      }
+      #splash .line {
+        position: relative;
+        width: 56px;
+        height: 2px;
+        overflow: hidden;
+        border-radius: 2px;
+        background: #e3d5c9;
+        animation: splash-in 0.8s 0.2s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      }
+      #splash .line::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: #b5473f;
+        transform: scaleX(0);
+        transform-origin: left;
+        animation: splash-draw 1.3s 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+      }
+      :root[data-theme='dark'] #splash { background: #1e1719; }
+      :root[data-theme='dark'] #splash .for-light { display: none; }
+      :root[data-theme='dark'] #splash .for-dark { display: block; }
+      :root[data-theme='dark'] #splash .line { background: #3d3134; }
+      :root[data-theme='dark'] #splash .line::after { background: #e0877c; }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) #splash { background: #1e1719; }
+        :root:not([data-theme='light']) #splash .for-light { display: none; }
+        :root:not([data-theme='light']) #splash .for-dark { display: block; }
+        :root:not([data-theme='light']) #splash .line { background: #3d3134; }
+        :root:not([data-theme='light']) #splash .line::after { background: #e0877c; }
+      }
+      @keyframes splash-in {
+        from { opacity: 0; transform: translateY(6px); }
+      }
+      @keyframes splash-draw {
+        50% { transform: scaleX(1); transform-origin: left; }
+        50.1% { transform: scaleX(1); transform-origin: right; }
+        100% { transform: scaleX(0); transform-origin: right; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #splash img, #splash .line, #splash .line::after { animation: none; }
+        #splash { transition-duration: 0.01ms; }
+      }
+    </style>
+    <noscript><style>#splash { display: none; }</style></noscript>
+  </head>
+  <body>
+    <div id="splash" aria-hidden="true">
+      <img class="for-light" src="/brand/wordmark-light.png" alt="" width="560" height="271" />
+      <img class="for-dark" src="/brand/wordmark-dark.png" alt="" width="560" height="271" />
+      <span class="line"></span>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

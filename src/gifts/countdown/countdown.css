@@ -1,0 +1,82 @@
+.gv-countdown {
+  text-align: center;
+}
+
+.cd-clock {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: clamp(36px, 7vh, 56px) auto 0;
+  max-width: 560px;
+  border-block: 1px solid var(--line);
+}
+
+.cd-unit {
+  display: grid;
+  gap: 4px;
+  padding: clamp(18px, 4vw, 28px) 4px;
+}
+
+.cd-unit + .cd-unit {
+  border-left: 1px solid var(--line);
+}
+
+.cd-num {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2.2rem, 1.2rem + 4.6vw, 3.8rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.02em;
+}
+
+.cd-label {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cd-when {
+  margin-top: 24px;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.cd-tz {
+  color: var(--ink-faint);
+}
+
+.cd-repeat {
+  margin-top: 6px;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.cd-arrived {
+  margin-top: 36px;
+}
+
+.cd-arrived-kicker {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(2rem, 1.4rem + 3vw, 3.2rem);
+  color: var(--accent);
+}
+
+.cd-message {
+  max-width: 42ch;
+  margin: 18px auto 0;
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .cd-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+  }
+}

@@ -1,0 +1,321 @@
+/* Form controls and the repeatable-row pattern shared by every gift form. */
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field + .field,
+.field-row + .field,
+.field + .field-row {
+  margin-top: 28px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: start;
+  gap: 28px;
+}
+
+/* Fields side by side share one baseline: no stacked-field spacing inside a row. */
+.field-row > .field + .field {
+  margin-top: 0;
+}
+
+.field-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.field-hint,
+.field-count {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.field-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.input,
+.select {
+  height: 50px;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+.input:hover,
+.textarea:hover,
+.select:hover {
+  border-color: var(--ink-faint);
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.textarea-letter {
+  min-height: 300px;
+  font-family: var(--serif);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.form-error {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.check + .field,
+.form-note + .field {
+  margin-top: 28px;
+}
+
+.check input {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.check small {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.form-section + .form-section,
+.field + .form-section,
+.form-section + .field {
+  margin-top: 44px;
+}
+
+.form-section-title {
+  margin-bottom: 18px;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.form-note {
+  margin-top: 10px;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+/* repeatable rows (reasons, questions, memories) */
+.repeat-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: item;
+}
+
+.repeat-item {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+
+.repeat-item:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.repeat-num {
+  padding-top: 12px;
+  font-family: var(--serif);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.repeat-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.remove-btn {
+  margin-top: 4px;
+  width: 36px;
+  height: 36px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-faint);
+}
+
+.remove-btn:hover {
+  color: var(--accent);
+  border-color: var(--line);
+}
+
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-btn span {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.add-btn:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.add-btn[disabled] {
+  color: var(--ink-faint);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* choice chips used by a few forms (wrap colour, timezone etc) */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choices legend {
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.choice {
+  position: relative;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.choice span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.choice input:checked + span {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.choice input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* file picker shown as a quiet link */
+.upload-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-link:hover span {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.upload-link:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.upload-link.is-disabled {
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  .repeat-item {
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+}
