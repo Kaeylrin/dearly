@@ -51,6 +51,7 @@ function EmailForm({ links }) {
   const [to, setTo] = useState('')
   const [fromName, setFromName] = useState('')
   const [note, setNote] = useState('')
+  const [website, setWebsite] = useState('')
   const [status, setStatus] = useState({ state: 'idle' })
 
   const onSubmit = async (e) => {
@@ -60,7 +61,7 @@ function EmailForm({ links }) {
     if (!fromName.trim()) return setStatus({ state: 'error', message: 'Add your name so she knows who it’s from.' })
     setStatus({ state: 'sending' })
     try {
-      await emailGift({ id: links.id, token: links.token, to: email, fromName: fromName.trim(), note: note.trim() })
+      await emailGift({ id: links.id, token: links.token, to: email, fromName: fromName.trim(), note: note.trim(), website })
       setStatus({ state: 'sent', to: email })
     } catch (err) {
       setStatus({ state: 'error', message: err.message })
@@ -88,6 +89,8 @@ function EmailForm({ links }) {
         <TextField label="Your name" placeholder="Your name" value={fromName} onChange={setFromName} max={60} required />
       </div>
       <TextField label="A line for the email" hint="Optional" placeholder="Open this when you have a quiet minute." value={note} onChange={setNote} max={200} />
+      {/* Honeypot for bots: hidden from people and screen readers. */}
+      <input className="hp-field" type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" value={website} onChange={(e) => setWebsite(e.target.value)} />
       <div className="share-actions">
         <button type="submit" className="btn btn-primary" disabled={status.state === 'sending'}>
           {status.state === 'sending' ? 'Sending…' : 'Send it to her'}

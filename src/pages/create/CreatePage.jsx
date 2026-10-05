@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Link from '../../components/ui/Link'
 import Loader from '../../components/ui/Loader'
-import { decodePayload, fetchGiftForEdit, saveGift } from '../../lib/giftStore'
+import { RateLimitError, decodePayload, fetchGiftForEdit, saveGift } from '../../lib/giftStore'
 import { catalogByType } from '../../gifts/catalog'
 import { useTitle } from '../../hooks/useTitle'
 import SharePanel from './SharePanel'
@@ -151,8 +151,12 @@ export default function CreatePage({ gift }) {
         storeSaved(gift.type, next)
       }
       goTo('send')
-    } catch {
-      setError('Something went wrong saving your gift. Check your connection and try again.')
+    } catch (err) {
+      setError(
+        err instanceof RateLimitError
+          ? 'You’ve saved a lot in a short time. Please wait a little while and try again.'
+          : 'Something went wrong saving your gift. Check your connection and try again.',
+      )
     } finally {
       setBusy(false)
     }

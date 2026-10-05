@@ -137,7 +137,7 @@ async function uploadDataUrl(value) {
 
 /* Replace every inline data: URL in the gift with an uploaded file's URL. */
 async function uploadMedia(value) {
-  if (typeof value === 'string') return value.startsWith('data:') ? uploadDataUrl(value) : value
+  if (typeof value === 'string') return /^data:(image|audio)\//.test(value) ? uploadDataUrl(value) : value
   if (Array.isArray(value)) return Promise.all(value.map(uploadMedia))
   if (value && typeof value === 'object') {
     const entries = await Promise.all(Object.entries(value).map(async ([k, v]) => [k, await uploadMedia(v)]))
@@ -161,8 +161,21 @@ function linksFor(type, id, token) {
  * link she already has shows the new version. Returns the links plus the data
  * as stored (media replaced by URLs), which the form should keep using.
  */
+export class RateLimitError extends Error {}
+
+const isRateLimited = (err) => err?.code === 'P0429' || /rate_limited/.test(err?.message || '')
+
 export async function saveGift(type, data, existing) {
   if (!hasBackend) return { ...(await createLegacyLinks(type, data)), data }
+  try {
+    return await saveToDatabase(type, data, existing)
+  } catch (err) {
+    if (isRateLimited(err)) throw new RateLimitError('rate_limited')
+    throw err
+  }
+}
+
+async function saveToDatabase(type, data, existing) {
   const stored = await uploadMedia(data)
   if (existing?.id && existing?.token) {
     const { data: ok, error } = await supabase.rpc('update_gift', { p_id: existing.id, p_token: existing.token, p_data: stored })
@@ -194,13 +207,13 @@ export async function fetchGiftForEdit(id, token) {
 }
 
 /* Emails the share link to her, through the /api/send-gift serverless function. */
-export async function emailGift({ id, token, to, fromName, note }) {
+export async function emailGift({ id, token, to, fromName, note, website = '' }) {
   let res
   try {
     res = await fetch('/api/send-gift', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, token, to, fromName, note }),
+      body: JSON.stringify({ id, token, to, fromName, note, website }),
     })
   } catch {
     throw new Error('Couldn’t reach the server. Check your connection and try again.')

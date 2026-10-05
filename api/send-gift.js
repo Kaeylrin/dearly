@@ -3,7 +3,8 @@
  *
  * Emails a gift's share link to the recipient through Resend. Only the sender
  * can do this: the gift's edit token has to match. Each gift can be emailed a
- * limited number of times so the endpoint can't be used to spam.
+ * limited number of times, and there are per-IP, per-recipient and site-wide
+ * daily limits, so the endpoint can't be used to spam.
  *
  * Env (Vercel project settings):
  *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY,
@@ -12,6 +13,9 @@
  */
 
 const MAX_EMAILS_PER_GIFT = 5
+const MAX_PER_IP_HOUR = 5
+const MAX_PER_RECIPIENT_DAY = 3
+const MAX_SITE_DAY = 300
 const ID_RE = /^[A-Za-z0-9]{10}$/
 const TOKEN_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -33,6 +37,22 @@ function siteUrl(req) {
   const host = req.headers['x-forwarded-host'] || req.headers.host
   const proto = req.headers['x-forwarded-proto'] || 'https'
   return `${proto}://${host}`
+}
+
+// Vercel sets x-real-ip from the connection; clients can't forge it.
+const clientIp = (req) => String(req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null
+
+const since = (ms) => new Date(Date.now() - ms).toISOString()
+
+async function count(path) {
+  const base = process.env.SUPABASE_URL.replace(/\/+$/, '')
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const res = await fetch(`${base}/rest/v1/${path}`, {
+    method: 'HEAD',
+    headers: { apikey: key, ...(key.startsWith('sb_') ? {} : { Authorization: `Bearer ${key}` }), Prefer: 'count=exact' },
+  })
+  if (!res.ok) throw new Error(`Supabase count ${res.status}`)
+  return Number((res.headers.get('content-range') || '*/0').split('/')[1]) || 0
 }
 
 async function db(path, init = {}) {
@@ -85,7 +105,20 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Email isn’t set up yet. Copy the link and send it yourself for now.' })
   }
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}
+  // Browsers always send Origin on cross-site POSTs; reject other sites calling this.
+  const origin = req.headers.origin
+  if (origin && origin !== siteUrl(req)) return res.status(403).json({ error: 'Not allowed.' })
+
+  let body
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}
+  } catch {
+    return res.status(400).json({ error: 'Bad request.' })
+  }
+  // Honeypot: a hidden field people never fill in. Pretend it worked.
+  if (body.website) return res.status(200).json({ ok: true })
+
+  const ip = clientIp(req)
   const id = clean(body.id, 10)
   const token = clean(body.token, 36)
   const to = clean(body.to, 254).toLowerCase()
@@ -104,6 +137,15 @@ export default async function handler(req, res) {
       return res.status(429).json({ error: 'This gift has been emailed a few times already. Copy the link and send it yourself.' })
     }
 
+    const [byIp, byRecipient, bySite] = await Promise.all([
+      ip ? count(`email_log?ip=eq.${encodeURIComponent(ip)}&created_at=gt.${since(3600e3)}&select=id`) : 0,
+      count(`email_log?recipient=eq.${encodeURIComponent(to)}&created_at=gt.${since(86400e3)}&select=id`),
+      count(`email_log?created_at=gt.${since(86400e3)}&select=id`),
+    ])
+    if (byIp >= MAX_PER_IP_HOUR || byRecipient >= MAX_PER_RECIPIENT_DAY || bySite >= MAX_SITE_DAY) {
+      return res.status(429).json({ error: 'Too many emails sent for now. Copy the link and send it yourself, or try again later.' })
+    }
+
     const url = `${siteUrl(req)}/${gift.type}/${gift.id}`
     const subject = `${fromName} made you something`
     const text = `${fromName} made you something on Dearly.${note ? `\n\n“${note}”` : ''}\n\nOpen it: ${url}\n`
@@ -118,6 +160,11 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'The email couldn’t be sent. Please try again in a moment.' })
     }
 
+    await db('email_log', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ ip, recipient: to, gift_id: id }),
+    })
     await db(`gifts?id=eq.${id}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=minimal' },
