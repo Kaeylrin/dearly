@@ -106,8 +106,9 @@ export async function POST(req) {
   }
 
   // Browsers always send Origin on cross-site POSTs; reject other sites calling this.
+  // The page calling us must be this deployment (or the configured public URL).
   const origin = req.headers.get('origin')
-  if (origin && origin !== siteUrl(req)) return json(403, { error: 'Not allowed.' })
+  if (origin && origin !== new URL(req.url).origin && origin !== siteUrl(req)) return json(403, { error: 'Not allowed.' })
 
   let body
   try {
