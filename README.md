@@ -72,7 +72,8 @@ shared links work on refresh) and adds security headers. `api/send-gift.js` is t
 function at `/api/send-gift`; run `vercel dev` to try it locally. Database setup: run the SQL files in
 `supabase/migrations` in order. Environment variables: `VITE_SUPABASE_URL`,
 `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`,
-`MAIL_FROM`, `PUBLIC_SITE_URL`.
+`MAIL_FROM`, `PUBLIC_SITE_URL`, `GMAIL_USER`, `GMAIL_APP_PASSWORD` (email goes through
+Gmail unless `RESEND_API_KEY` and `MAIL_FROM` are both set).
 
 ## Logos
 

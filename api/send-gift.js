@@ -1,7 +1,8 @@
 /*
  * POST /api/send-gift  { id, token, to, fromName, note }
  *
- * Emails a gift's share link to the recipient through Resend. Only the sender
+ * Emails a gift's share link to the recipient, through Resend when a verified
+ * domain is configured, otherwise through a Gmail account. Only the sender
  * can do this: the gift's edit token has to match. Each gift can be emailed a
  * limited number of times, and there are per-IP, per-recipient and site-wide
  * daily limits, so the endpoint can't be used to spam.
@@ -9,10 +10,15 @@
  * Runs as a Vercel Function (Web Request/Response API), at /api/send-gift.
  *
  * Env (Vercel > Project > Settings > Environment Variables):
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY,
- *   MAIL_FROM        e.g. "Dearly <gifts@yourdomain.com>" (verified in Resend)
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   Gmail:  GMAIL_USER (e.g. dearly.gifts@gmail.com), GMAIL_APP_PASSWORD
+ *           (Google Account > Security > 2-Step Verification > App passwords)
+ *   Resend: RESEND_API_KEY + MAIL_FROM "Dearly <hello@yourdomain.com>" (domain verified in Resend).
+ *           Used instead of Gmail when both are set.
  *   PUBLIC_SITE_URL  optional, e.g. https://dearly.app (defaults to the request host)
  */
+
+import nodemailer from 'nodemailer'
 
 const MAX_EMAILS_PER_GIFT = 5
 const MAX_PER_IP_HOUR = 5
@@ -94,12 +100,41 @@ function emailHtml({ fromName, note, url }) {
 </body></html>`
 }
 
+async function sendMail({ useResend, to, subject, html, text, fromName }) {
+  if (useResend) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject, html, text }),
+    })
+    if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`)
+    return
+  }
+  const user = process.env.GMAIL_USER
+  const transport = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: { user, pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '') },
+  })
+  // Gmail requires the account itself as sender; the sender's name shows in the display name.
+  await transport.sendMail({
+    from: { name: `${fromName.replace(/["<>]/g, '')} via Dearly`, address: user },
+    to,
+    subject,
+    html,
+    text,
+  })
+}
+
 /* Only POST is exported; Vercel answers other methods with 405. */
 export async function POST(req) {
   if (req.method !== 'POST') {
     return json(405, { error: 'Method not allowed.' }, { Allow: 'POST' })
   }
-  const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'RESEND_API_KEY', 'MAIL_FROM'].filter((k) => !process.env[k])
+  const useResend = Boolean(process.env.RESEND_API_KEY && process.env.MAIL_FROM)
+  const mailEnv = useResend ? [] : ['GMAIL_USER', 'GMAIL_APP_PASSWORD']
+  const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', ...mailEnv].filter((k) => !process.env[k])
   if (missing.length) {
     console.error('send-gift: missing env', missing)
     return json(500, { error: 'Email isn’t set up yet. Copy the link and send it yourself for now.' })
@@ -153,13 +188,10 @@ export async function POST(req) {
     const subject = `${fromName} made you something`
     const text = `${fromName} made you something on Dearly.${note ? `\n\n“${note}”` : ''}\n\nOpen it: ${url}\n`
 
-    const sent = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject, html: emailHtml({ fromName, note, url }), text }),
-    })
-    if (!sent.ok) {
-      console.error('send-gift: resend', sent.status, await sent.text())
+    try {
+      await sendMail({ useResend, to, subject, html: emailHtml({ fromName, note, url }), text, fromName })
+    } catch (err) {
+      console.error('send-gift: mail', err)
       return json(502, { error: 'The email couldn’t be sent. Please try again in a moment.' })
     }
 
