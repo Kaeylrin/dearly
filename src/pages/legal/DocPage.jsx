@@ -1,11 +1,6 @@
 import { useTitle } from '../../hooks/useTitle'
 import './legal.css'
 
-/* Bracketed text in the source documents still needs filling in before real use. */
-export function Todo({ children }) {
-  return <span className="todo">[{children}]</span>
-}
-
 export default function DocPage({ title, meta, intro, children }) {
   useTitle(`${title} · Dearly`)
   return (

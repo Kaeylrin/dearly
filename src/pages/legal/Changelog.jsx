@@ -24,6 +24,7 @@ const RELEASES = [
           'Form fields line up at the same height everywhere, side-by-side fields included',
           'Short gifts open in the middle of her screen, like a card being handed over',
           'Friendlier messages when a link is mistyped or the connection drops',
+          'Terms and privacy policy updated: governing law (Philippines), using the email option, and your data rights',
         ],
       },
       {

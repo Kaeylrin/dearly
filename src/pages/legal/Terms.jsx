@@ -1,5 +1,5 @@
 import Link from '../../components/ui/Link'
-import DocPage, { Todo } from './DocPage'
+import DocPage from './DocPage'
 
 export default function Terms() {
   return (
@@ -7,7 +7,7 @@ export default function Terms() {
       title="Terms and Conditions"
       meta={
         <>
-          Version 1.0.0 · Last updated: September 28, 2026
+          Version 1.1.0 · Last updated: October 6, 2026
         </>
       }
       intro="By using Dearly, you agree to these terms. If you don’t agree, please don’t use the site."
@@ -23,6 +23,7 @@ export default function Terms() {
         <li>You’re responsible for what you create and send through Dearly</li>
         <li>Don’t use Dearly to send anything illegal, harassing, hateful, or intended to harm someone</li>
         <li>Don’t attempt to abuse, overload, or break the service (for example, mass-creating gifts to spam the system)</li>
+        <li>Only email a gift to someone you know and who would want to receive it, and don’t use the email option for advertising or bulk messages</li>
         <li>Dearly is intended for personal, non-commercial use</li>
       </ul>
 
@@ -62,7 +63,12 @@ export default function Terms() {
 
       <h2>Governing law</h2>
       <p>
-        <Todo>Add the governing jurisdiction here before this is published for real use.</Todo>
+        Dearly is made and run by an individual developer based in the Philippines. These terms are governed by the laws of the Republic
+        of the Philippines. Any dispute about Dearly or these terms will be handled by the proper courts of the Philippines.
+      </p>
+      <p>
+        Nothing in these terms takes away rights you have under the consumer or data protection laws of the place where you live, where
+        those laws can’t be set aside by an agreement like this one.
       </p>
 
       <h2>Changes to these terms</h2>
@@ -70,7 +76,7 @@ export default function Terms() {
 
       <h2>Contact</h2>
       <p>
-        <Todo>Add a contact method here before this is published for real use.</Todo>
+        Questions about these terms, or to report a gift that breaks them: email <a className="text-link" href="mailto:dearly.giftsapp@gmail.com">dearly.giftsapp@gmail.com</a>.
       </p>
     </DocPage>
   )

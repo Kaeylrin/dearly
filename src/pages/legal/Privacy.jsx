@@ -1,4 +1,4 @@
-import DocPage, { Todo } from './DocPage'
+import DocPage from './DocPage'
 
 export default function Privacy() {
   return (
@@ -51,7 +51,7 @@ export default function Privacy() {
       <p>
         Gifts you create are kept so the link continues to work. There is currently no automatic deletion, since the point of several of
         these gift types (a letter, a memory timeline) is that someone can come back to them later. If you want something you made
-        deleted, <Todo>contact method to be added</Todo> and it will be removed.
+        deleted, email <a className="text-link" href="mailto:dearly.giftsapp@gmail.com">dearly.giftsapp@gmail.com</a> with its link and it will be removed.
       </p>
 
       <h2>Who else sees your data</h2>
@@ -72,6 +72,12 @@ export default function Privacy() {
         treat it the way you’d treat any private link: don’t post it somewhere public if you don’t want it seen.
       </p>
 
+      <h2>Your rights</h2>
+      <p>
+        Dearly is run by an individual developer in the Philippines and follows the Data Privacy Act of 2012 (Republic Act No. 10173). You
+        can ask what data is held about a gift you made, ask for it to be corrected, or ask for it to be deleted, using the contact below.
+      </p>
+
       <h2>Children’s privacy</h2>
       <p>Dearly isn’t directed at children and doesn’t knowingly collect data from anyone under 13.</p>
 
@@ -80,7 +86,8 @@ export default function Privacy() {
 
       <h2>Contact</h2>
       <p>
-        <Todo>Add a contact method here before this policy is published for real use, an email address or a contact form.</Todo>
+        Questions about your data, or a request to see, correct or delete a gift: email <a className="text-link" href="mailto:dearly.giftsapp@gmail.com">dearly.giftsapp@gmail.com</a>. Include the gift’s link so it can be
+        found.
       </p>
     </DocPage>
   )
