@@ -14,7 +14,7 @@ npm run lint
 ## How it's organised
 
 ```
-design/                 reference HTML and the source logo files
+design/                 source logo files (local only, not in the repo)
 public/
   brand/                wordmarks (also used by the first-load splash)
   icons/                favicons, light and dark
@@ -36,7 +36,7 @@ src/
   gifts/                catalog, registry (lazy loading), one folder per gift type;
                         every gift module has the same shape, documented in registry.js
   hooks/                useTitle, useReveal (scroll reveal)
-  lib/                  giftStore (links), validate, media, theme, splash
+  lib/                  giftStore (database), supabase, smoothScroll, validate, media, theme, splash
   styles/               tokens, base, buttons, forms, gift-view, motion
 ```
 
@@ -46,24 +46,21 @@ Routes follow the PRD: `/:type/new` creates, `/:type/:id` is the link she opens.
 
 - Page changes use the browser's View Transitions: the old page fades out, the new one rises in,
   and the nav stays put. Browsers without them get a simple fade-in.
-- Links within the same page (the logo on the home page, "Gifts", "Start creating")
-  smooth-scroll. Back/forward returns to where you were.
+- Wheel scrolling is eased with Lenis on desktop (`src/lib/smoothScroll.js`); phones keep
+  their native scrolling. Links within the same page ("Gifts", "Start creating") glide to
+  their section. Back/forward returns to where you were.
 - A splash shows on first load until the fonts are ready. Gift pages load on demand, with a
   thin progress bar if that takes a moment.
 - All of it switches off under "reduce motion" in the OS settings.
 
-## Storage (V1)
+## Storage
 
-There is no backend yet. A gift's content is compressed into its own link, after the `#`.
-That part of a URL is never sent to a server, so nothing is stored anywhere except the link itself.
-
-- Text-only gifts give short links (a few hundred characters).
-- Photos (timeline) and recordings (voice note) make links long, roughly 5–200 KB.
-  Most apps handle that, but some messengers may cut very long links.
-
-Moving to a database (Supabase, per the implementation plan) only means changing
-`createLinks` and `decodePayload` in `src/lib/giftStore.js`. The `Loader` component in
-`components/ui` is ready for the moments a database call takes time.
+Gifts live in Supabase. The share link carries only the gift's id (`/letter/k3J9xQ2a`); the
+sender's edit link also carries a secret key (`/letter/new?edit=…&key=…`). Photos and voice
+notes are uploaded to the `gift-media` storage bucket. The browser only talks to the database
+through four functions (create, open, open for editing, save), with rate limits; see
+`supabase/migrations`. Links made before v1.1.0, which carry the whole gift after the `#`,
+still open.
 
 ## Deploying
 
@@ -71,9 +68,9 @@ Hosted on Vercel. `vercel.json` sends every route except `/api` to `index.html` 
 shared links work on refresh) and adds security headers. `api/send-gift.js` is the email
 function at `/api/send-gift`; run `vercel dev` to try it locally. Database setup: run the SQL files in
 `supabase/migrations` in order. Environment variables: `VITE_SUPABASE_URL`,
-`VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`,
-`MAIL_FROM`, `PUBLIC_SITE_URL`, `GMAIL_USER`, `GMAIL_APP_PASSWORD` (email goes through
-Gmail unless `RESEND_API_KEY` and `MAIL_FROM` are both set).
+`VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_USER`,
+`GMAIL_APP_PASSWORD`. Optional: `RESEND_API_KEY` + `MAIL_FROM` (sends through Resend
+instead of Gmail once a domain is verified), `PUBLIC_SITE_URL`.
 
 ## Logos
 

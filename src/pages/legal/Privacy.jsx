@@ -6,7 +6,7 @@ export default function Privacy() {
       title="Privacy Policy"
       meta={
         <>
-          Version 1.0.0 · Last updated: <Todo>add date on first publish</Todo>
+          Version 1.1.0 · Last updated: October 6, 2026
         </>
       }
       intro="Dearly is built to be used without an account. This policy explains what that does, and doesn’t, mean for your data."

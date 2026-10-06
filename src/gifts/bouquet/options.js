@@ -132,7 +132,7 @@ export const RIBBONS = [
 /* Which colour pickers matter for each style. */
 export const usesPaper = (style) => style !== 'handtied'
 
-export const flowerDef = (kind) => FLOWERS.find((f) => f.kind === kind)
+const flowerDef = (kind) => FLOWERS.find((f) => f.kind === kind)
 
 /* "lily:pink" → { kind, color, hex, def }, or null if unknown. */
 export function parseFlower(value) {

@@ -5,6 +5,7 @@ import Loader from '../../components/ui/Loader'
 import { RateLimitError, decodePayload, fetchGiftForEdit, saveGift } from '../../lib/giftStore'
 import { catalogByType } from '../../gifts/catalog'
 import { useTitle } from '../../hooks/useTitle'
+import { scrollToTarget } from '../../lib/smoothScroll'
 import SharePanel from './SharePanel'
 import './CreatePage.css'
 
@@ -125,7 +126,7 @@ export default function CreatePage({ gift }) {
   const goTo = (next) => {
     setStep(next)
     setError('')
-    requestAnimationFrame(() => topRef.current?.scrollIntoView({ block: 'start' }))
+    requestAnimationFrame(() => topRef.current && scrollToTarget(topRef.current))
   }
 
   const onPreview = (e) => {

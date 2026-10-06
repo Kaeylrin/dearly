@@ -37,7 +37,7 @@ function subscribe(fn) {
   return () => listeners.delete(fn)
 }
 
-export function toggleTheme() {
+function toggleTheme() {
   const next = isDark() ? 'light' : 'dark'
   document.documentElement.setAttribute('data-theme', next)
   try {

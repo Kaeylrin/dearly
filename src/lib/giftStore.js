@@ -42,7 +42,7 @@ async function pipeThrough(bytes, stream) {
 
 const canCompress = typeof CompressionStream !== 'undefined'
 
-export async function encodePayload(type, data) {
+async function encodePayload(type, data) {
   const json = JSON.stringify({ v: VERSION, t: type, d: data })
   const bytes = new TextEncoder().encode(json)
   if (canCompress) {
@@ -76,7 +76,7 @@ export async function decodePayload(raw) {
   return { type: parsed.t, data: parsed.d }
 }
 
-export class GiftLinkError extends Error {
+class GiftLinkError extends Error {
   constructor(reason) {
     super(reason)
     this.reason = reason
@@ -89,7 +89,7 @@ function randomId(length = 10) {
   return Array.from(values, (v) => alphabet[v % alphabet.length]).join('')
 }
 
-export async function createLegacyLinks(type, data) {
+async function createLegacyLinks(type, data) {
   const payload = await encodePayload(type, data)
   const origin = window.location.origin
   const id = randomId()
@@ -106,7 +106,6 @@ export const LONG_LINK = 8000
 
 /* ---------- database ---------- */
 
-export { hasBackend }
 
 const ID_RE = /^[A-Za-z0-9]{10}$/
 const TOKEN_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

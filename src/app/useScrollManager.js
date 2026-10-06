@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
+import { scrollToTarget } from '../lib/smoothScroll'
 
 const isAnchor = (id) => id && id.length < 40 && /^[a-z][\w-]*$/i.test(id)
 
@@ -37,15 +38,15 @@ export function useScrollManager() {
     const target = isAnchor(id) ? document.getElementById(id) : null
 
     if (navType === 'POP' && !samePage) {
-      window.scrollTo({ top: positions.current.get(key) ?? 0, behavior: 'instant' })
+      scrollToTarget(positions.current.get(key) ?? 0, { smooth: false })
       return
     }
     if (samePage) {
-      if (target) target.scrollIntoView({ behavior: 'smooth' })
-      else if (!id) window.scrollTo({ top: 0, behavior: 'smooth' })
+      if (target) scrollToTarget(target)
+      else if (!id) scrollToTarget(0)
       return
     }
-    if (target) target.scrollIntoView({ behavior: 'instant' })
-    else window.scrollTo({ top: 0, behavior: 'instant' })
+    if (target) scrollToTarget(target, { smooth: false })
+    else scrollToTarget(0, { smooth: false })
   }, [pathname, hash, key, navType])
 }

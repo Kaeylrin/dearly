@@ -7,7 +7,7 @@ export default function Terms() {
       title="Terms and Conditions"
       meta={
         <>
-          Version 1.0.0 · Last updated: <Todo>add date on first publish</Todo>
+          Version 1.0.0 · Last updated: September 28, 2026
         </>
       }
       intro="By using Dearly, you agree to these terms. If you don’t agree, please don’t use the site."
