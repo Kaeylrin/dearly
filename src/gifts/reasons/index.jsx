@@ -139,6 +139,8 @@ function View({ data, preview }) {
 
   const next = () => {
     if (!remaining.length) return
+    // Runs on tap, not during render; the linter can't tell.
+    // oxlint-disable-next-line react/purity
     const pick = remaining[Math.floor(Math.random() * remaining.length)]
     setRevealed([...revealed, pick])
     requestAnimationFrame(() => currentRef.current?.focus())

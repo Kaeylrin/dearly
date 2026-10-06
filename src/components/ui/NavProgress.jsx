@@ -15,7 +15,8 @@ export default function NavProgress() {
       const t = setTimeout(() => setPhase('loading'), 120)
       return () => clearTimeout(t)
     }
-    // Finish the bar before hiding it, but only if it was showing.
+    // Finish the bar before hiding it, but only if it was showing. This effect exists to drive that animation.
+    // oxlint-disable-next-line react/set-state-in-effect
     setPhase((p) => (p === 'loading' ? 'done' : 'idle'))
     const t = setTimeout(() => setPhase('idle'), 400)
     return () => clearTimeout(t)

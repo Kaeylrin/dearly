@@ -86,6 +86,8 @@ function Form({ value, onChange }) {
     next.tz = localTz()
     onChange(next)
   }
+  // Re-checked on every render on purpose: the note should appear once the moment passes.
+  // oxlint-disable-next-line react/purity
   const past = value.target && !value.monthly && new Date(value.target) < new Date()
   return (
     <>
