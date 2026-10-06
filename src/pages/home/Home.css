@@ -123,7 +123,7 @@ html:not(.is-ready) .floater {
   --r: -3deg;
   --t: 6.5s;
   --in: 0.4s;
-  top: 4px;
+  top: 28px;
   left: calc(var(--gutter) - 12px);
 }
 
@@ -141,7 +141,7 @@ html:not(.is-ready) .floater {
   --t: 7s;
   --d: -3.5s;
   --in: 0.6s;
-  bottom: 18px;
+  bottom: 46px;
   left: calc(var(--gutter) + 26%);
 }
 
@@ -150,7 +150,7 @@ html:not(.is-ready) .floater {
   --t: 6s;
   --d: -1.2s;
   --in: 0.7s;
-  bottom: 30px;
+  bottom: 58px;
   right: calc(var(--gutter) - 8px);
 }
 

@@ -12,6 +12,12 @@
   padding-top: calc(72px + env(safe-area-inset-top, 0px));
 }
 
+/* Short gifts sit in the middle of the screen like a card being handed over;
+   long ones still start at the top and scroll. */
+.gift-main > * {
+  margin-block: auto;
+}
+
 .gift-footer {
   display: flex;
   justify-content: center;
