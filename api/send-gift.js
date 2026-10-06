@@ -75,7 +75,9 @@ async function db(path, init = {}) {
     },
   })
   if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`)
-  return res.status === 204 ? null : res.json()
+  // Writes with `return=minimal` come back with an empty body (201/204).
+  const body = await res.text()
+  return body ? JSON.parse(body) : null
 }
 
 function emailHtml({ fromName, note, url }) {
