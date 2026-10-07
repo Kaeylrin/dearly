@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import Link from '../../components/ui/Link'
 import Loader from '../../components/ui/Loader'
+import { useSplashHold } from '../../lib/splash'
 import { decodePayload, fetchGift } from '../../lib/giftStore'
 import { useTitle } from '../../hooks/useTitle'
 import './ViewPage.css'
@@ -13,6 +14,8 @@ export default function ViewPage({ gift }) {
   const [state, setState] = useState({ status: 'loading' })
 
   useTitle(gift.viewTitle || 'Something for you')
+  // Opened fresh from a shared link: keep the splash up until the gift has loaded.
+  useSplashHold(state.status === 'loading')
 
   useEffect(() => {
     let cancelled = false

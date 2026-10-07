@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Link from '../../components/ui/Link'
 import Loader from '../../components/ui/Loader'
+import { useSplashHold } from '../../lib/splash'
 import { RateLimitError, decodePayload, fetchGiftForEdit, saveGift } from '../../lib/giftStore'
 import { catalogByType } from '../../gifts/catalog'
 import { useTitle } from '../../hooks/useTitle'
@@ -80,6 +81,7 @@ export default function CreatePage({ gift }) {
   const topRef = useRef(null)
 
   useTitle(`${meta.title} · Dearly`)
+  useSplashHold(opening)
 
   // An edit link (/type/new?edit=id&key=token, or an older /type/new#payload) prefills
   // the form, then the URL is cleaned so a refresh keeps later edits instead of reloading.

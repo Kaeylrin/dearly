@@ -39,7 +39,8 @@
     </script>
 
     <!-- First-load splash. Inline so it paints before the app's CSS and JS arrive;
-         src/lib/splash.js fades it out once the app and fonts are ready. -->
+         It starts hidden and only appears if loading is actually slow (see the script below);
+         src/lib/splash.js removes it once the app, fonts and page data are ready. -->
     <style>
       #splash {
         position: fixed;
@@ -50,7 +51,13 @@
         justify-items: center;
         gap: 22px;
         background: #faf4ee;
-        transition: opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0.5s;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.35s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0.35s;
+      }
+      #splash.is-shown {
+        opacity: 1;
+        visibility: visible;
       }
       #splash.is-leaving {
         opacity: 0;
@@ -115,6 +122,15 @@
       <img class="for-dark" src="/brand/wordmark-dark.png" alt="" width="560" height="271" />
       <span class="line"></span>
     </div>
+    <script>
+      // Only show the splash if the first load takes a noticeable moment.
+      window.__splashTimer = setTimeout(function () {
+        var el = document.getElementById('splash')
+        if (!el) return
+        el.dataset.shownAt = String(performance.now())
+        el.classList.add('is-shown')
+      }, 300)
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
