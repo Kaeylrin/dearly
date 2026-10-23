@@ -9,6 +9,10 @@ import { useTitle } from '../../hooks/useTitle'
 import { scrollToTarget } from '../../lib/smoothScroll'
 import SharePanel from './SharePanel'
 import './CreatePage.css'
+import GiftOptions from './GiftOptions'
+import ReplyInbox from './ReplyInbox'
+import { cleanSettings, EMPTY_SETTINGS, settingsProblem } from '../../lib/giftSettings'
+import { occasionTemplates } from '../../lib/occasionTemplates'
 
 const STEPS = [
   { id: 'write', label: 'Write' },
@@ -71,6 +75,9 @@ export default function CreatePage({ gift }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [data, setData] = useState(() => loadDraft(gift))
+  const [settings, setSettings] = useState(() => {
+    try { return cleanSettings(JSON.parse(localStorage.getItem(`dearly-options-${gift.type}`) || '{}')) } catch { return { ...EMPTY_SETTINGS } }
+  })
   const [step, setStep] = useState('write')
   const [error, setError] = useState('')
   const [links, setLinks] = useState(null)
@@ -94,6 +101,7 @@ export default function CreatePage({ gift }) {
       .then((res) => {
         if (cancelled || res.type !== gift.type) return
         setData(gift.clean(res.data))
+        setSettings(cleanSettings(res.settings))
         if (edit) {
           setSaved(edit)
           storeSaved(gift.type, edit)
@@ -118,12 +126,13 @@ export default function CreatePage({ gift }) {
     const t = setTimeout(() => {
       try {
         localStorage.setItem(draftKey(gift.type), JSON.stringify(data))
+        localStorage.setItem(`dearly-options-${gift.type}`, JSON.stringify(settings))
       } catch {
         /* quota exceeded (large photos/audio): the draft just isn't kept */
       }
     }, 400)
     return () => clearTimeout(t)
-  }, [data, gift.type])
+  }, [data, settings, gift.type])
 
   const goTo = (next) => {
     setStep(next)
@@ -133,7 +142,7 @@ export default function CreatePage({ gift }) {
 
   const onPreview = (e) => {
     e?.preventDefault()
-    const problem = gift.check(ready(gift, data))
+    const problem = gift.check(ready(gift, data)) || settingsProblem(settings)
     if (problem) {
       setError(problem)
       return
@@ -144,7 +153,7 @@ export default function CreatePage({ gift }) {
   const onCreate = async () => {
     setBusy(true)
     try {
-      const res = await saveGift(gift.type, ready(gift, data), saved)
+      const res = await saveGift(gift.type, ready(gift, data), saved, cleanSettings(settings))
       setLinks(res)
       // Keep uploaded media URLs so saving again doesn't re-upload.
       setData(gift.clean(res.data))
@@ -167,6 +176,7 @@ export default function CreatePage({ gift }) {
 
   const startOver = () => {
     setData(gift.empty())
+    setSettings({ ...EMPTY_SETTINGS })
     setLinks(null)
     setSaved(null)
     storeSaved(gift.type, null)
@@ -217,7 +227,13 @@ export default function CreatePage({ gift }) {
 
       {step === 'write' && !opening && (
         <form className="create-form" onSubmit={onPreview} noValidate>
+          {occasionTemplates[gift.type] && <label className="field"><span className="field-label">Start with an occasion</span><select className="select" defaultValue="" onChange={(e) => {
+            const template = occasionTemplates[gift.type].find((t) => t.id === e.target.value)
+            if (template) setData(gift.clean({ ...data, ...template.data }))
+            e.target.value = ''
+          }}><option value="">Choose a starter (replaces the message)</option>{occasionTemplates[gift.type].map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}</select></label>}
           <Form value={data} onChange={setData} />
+          <GiftOptions value={settings} onChange={setSettings} />
           <div className="create-actions">
             <button type="submit" className="btn btn-primary">
               Preview <span className="arrow" aria-hidden="true">→</span>
@@ -257,6 +273,7 @@ export default function CreatePage({ gift }) {
           {Extras && <Extras data={ready(gift, data)} />}
         </SharePanel>
       )}
+      {saved && !opening && <ReplyInbox key={saved.id} saved={saved} />}
     </div>
   )
 }

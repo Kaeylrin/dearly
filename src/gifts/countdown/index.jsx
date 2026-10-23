@@ -79,6 +79,13 @@ function split(ms) {
   return { days: Math.floor(s / 86400), hours: Math.floor((s % 86400) / 3600), minutes: Math.floor((s % 3600) / 60), seconds: s % 60 }
 }
 
+export function CountdownClock({ milliseconds }) {
+  const parts = split(milliseconds)
+  return <div className="cd-clock" role="timer" aria-label={`${parts.days} days, ${parts.hours} hours, ${parts.minutes} minutes, ${parts.seconds} seconds to go`}>
+    {Object.entries(parts).map(([label, n]) => <div className="cd-unit" key={label} aria-hidden="true"><span className="cd-num">{String(n).padStart(label === 'days' ? 1 : 2, '0')}</span><span className="cd-label">{n === 1 ? label.slice(0, -1) : label}</span></div>)}
+  </div>
+}
+
 function Form({ value, onChange }) {
   const update = (patch) => {
     const next = { ...value, ...patch }
@@ -144,7 +151,6 @@ function useNow() {
 function View({ data }) {
   const now = useNow()
   const { target, arrived } = resolve(data, now)
-  const parts = split(target - now)
   const viewerTz = localTz()
 
   const when = useMemo(
@@ -152,14 +158,6 @@ function View({ data }) {
       new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(target),
     [target],
   )
-
-  const units = [
-    ['days', parts.days],
-    ['hours', parts.hours],
-    ['minutes', parts.minutes],
-    ['seconds', parts.seconds],
-  ]
-  const spoken = `${parts.days} days, ${parts.hours} hours and ${parts.minutes} minutes to go`
 
   return (
     <div className="gv gv-countdown">
@@ -172,14 +170,7 @@ function View({ data }) {
         </div>
       ) : (
         <>
-          <div className="cd-clock" role="timer" aria-label={spoken}>
-            {units.map(([label, n]) => (
-              <div className="cd-unit" key={label} aria-hidden="true">
-                <span className="cd-num">{String(n).padStart(label === 'days' ? 1 : 2, '0')}</span>
-                <span className="cd-label">{n === 1 ? label.slice(0, -1) : label}</span>
-              </div>
-            ))}
-          </div>
+          <CountdownClock milliseconds={target - now} />
           <p className="cd-when">
             {when}
             {data.tz && viewerTz && data.tz !== viewerTz && <span className="cd-tz"> · your time (set in {data.tz.replace(/_/g, ' ')})</span>}

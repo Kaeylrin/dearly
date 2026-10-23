@@ -342,3 +342,9 @@
     max-width: 230px;
   }
 }
+.bq-arrangement { position: relative; max-width: 300px; margin: 0 auto; }
+.bq-placement { position: absolute; inset: 0 0 auto; aspect-ratio: 320 / 420; pointer-events: none; }
+.bq-spot { position: absolute; transform: translate(-50%, -50%); width: 32px; height: 32px; border: 1px solid var(--accent); border-radius: 50%; background: var(--paper); color: var(--accent); font: inherit; font-size: 12px; pointer-events: auto; cursor: pointer; }
+.bq-spot:disabled { visibility: hidden; }
+.bq-spot:hover, .bq-spot:focus-visible { outline: 3px solid var(--accent-soft); }
+@media (max-width: 640px) { .bq-arrangement { max-width: 230px; } }

@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { FLOWER_SLOTS as SLOTS, cleanPositions } from './placement'
 import { MAX_FLOWERS, PAPERS, RIBBONS, WRAP_STYLES, hexOf, labelOf, parseFlower, shade } from './options'
 
 /* ---------- flower heads: drawn around (0, 0), roughly 30px radius ---------- */
@@ -211,11 +212,7 @@ export function FlowerIcon({ value }) {
 
 /* ---------- arrangement ---------- */
 
-/* Head positions, filled centre-out. */
-const SLOTS = [
-  [200, 182], [148, 204], [252, 202], [176, 140], [226, 142], [108, 166], [292, 164],
-  [200, 104], [128, 244], [272, 244], [146, 108], [256, 106], [92, 214], [308, 212],
-]
+/* Head positions, filled centre-out; custom positions keep old bouquets compatible. */
 
 /* Where the stems meet, per wrap style. */
 const GATHER = { cone: [200, 352], layered: [200, 352], handtied: [200, 332], vase: [200, 412], hatbox: [200, 320] }
@@ -325,16 +322,17 @@ function wrapLayers(style, paper, ribbon) {
 }
 
 const BouquetArt = forwardRef(function BouquetArt(
-  { flowers, wrap = 'cone', paper = 'kraft', ribbon = 'rouge', title, decorative = false, className = '' },
+  { flowers, positions, wrap = 'cone', paper = 'kraft', ribbon = 'rouge', title, decorative = false, className = '' },
   ref,
 ) {
   const style = WRAP_STYLES.some((s) => s.id === wrap) ? wrap : 'cone'
   const [gx, gy] = GATHER[style]
+  const placement = cleanPositions(positions, flowers.length)
   const items = flowers
     .slice(0, MAX_FLOWERS)
     .map(parseFlower)
     .filter(Boolean)
-    .map((f, i) => ({ ...f, x: SLOTS[i][0], y: SLOTS[i][1], rot: ((i * 47) % 30) - 15 }))
+    .map((f, i) => ({ ...f, x: SLOTS[placement[i]][0], y: SLOTS[placement[i]][1], rot: ((i * 47) % 30) - 15 }))
   // Back rows (smaller y) are drawn first so front flowers overlap them.
   const byDepth = [...items].sort((a, b) => a.y - b.y)
   const layers = wrapLayers(style, hexOf(PAPERS, paper), hexOf(RIBBONS, ribbon))

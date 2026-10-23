@@ -2,7 +2,8 @@ import Link from '../ui/Link'
 import Logo from '../brand/Logo'
 import './Footer.css'
 
-const VERSION = 'v1.1.0'
+import { version } from '../../../package.json'
+const VERSION = `v${version}`
 
 export default function Footer() {
   return (

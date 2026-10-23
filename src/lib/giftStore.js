@@ -164,24 +164,27 @@ export class RateLimitError extends Error {}
 
 const isRateLimited = (err) => err?.code === 'P0429' || /rate_limited/.test(err?.message || '')
 
-export async function saveGift(type, data, existing) {
-  if (!hasBackend) return { ...(await createLegacyLinks(type, data)), data }
+export async function saveGift(type, data, existing, settings) {
+  if (!hasBackend) {
+    if (settings?.unlockAt || settings?.notifyOpened || settings?.allowReplies) throw new Error('These options require a database.')
+    return { ...(await createLegacyLinks(type, data)), data }
+  }
   try {
-    return await saveToDatabase(type, data, existing)
+    return await saveToDatabase(type, data, existing, settings)
   } catch (err) {
     if (isRateLimited(err)) throw new RateLimitError('rate_limited')
     throw err
   }
 }
 
-async function saveToDatabase(type, data, existing) {
+async function saveToDatabase(type, data, existing, settings) {
   const stored = await uploadMedia(data)
   if (existing?.id && existing?.token) {
-    const { data: ok, error } = await supabase.rpc('update_gift', { p_id: existing.id, p_token: existing.token, p_data: stored })
+    const { data: ok, error } = await supabase.rpc('update_gift', { p_id: existing.id, p_token: existing.token, p_data: stored, p_settings: settings })
     if (error) throw error
     if (ok) return { ...linksFor(type, existing.id, existing.token), data: stored }
   }
-  const { data: rows, error } = await supabase.rpc('create_gift', { p_type: type, p_data: stored })
+  const { data: rows, error } = await supabase.rpc('create_gift', { p_type: type, p_data: stored, p_settings: settings })
   if (error) throw error
   const row = rows?.[0]
   if (!row) throw new Error('No gift returned')
@@ -189,12 +192,25 @@ async function saveToDatabase(type, data, existing) {
 }
 
 /* Recipient view. `count` is off for the sender opening their own preview. */
-export async function fetchGift(id, { count = true } = {}) {
+export async function fetchGift(id, { count = false } = {}) {
   if (!hasBackend || !ID_RE.test(id || '')) throw new GiftLinkError('missing')
   const { data: rows, error } = await supabase.rpc('get_gift', { p_id: id, p_count: count })
   if (error) throw new GiftLinkError('network')
   if (!rows?.[0]) throw new GiftLinkError('missing')
   return rows[0]
+}
+
+export async function fetchReplies(id, token) {
+  const { data, error } = await supabase.rpc('get_gift_replies', { p_id: id, p_token: token })
+  if (error) throw error
+  return data || []
+}
+
+export async function giftEvent(id, action, message = '') {
+  const res = await fetch('/api/gift-event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action, message }) })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(body.error || 'Could not send. Please try again.')
+  return body
 }
 
 export async function fetchGiftForEdit(id, token) {

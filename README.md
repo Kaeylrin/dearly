@@ -64,6 +64,8 @@ still open.
 
 ## Deploying
 
+For v1.2.0, see [the isolated testing checklist](docs/v1.2.0-testing.md) before merging. Migration `003_personal_gifting.sql` adds server-gated scheduling, private replies, optional opened-email consent, bundles and atomic email reservations. Set `CRON_SECRET` for the protected daily maintenance job. Set `PUBLIC_SITE_URL` to the deployment's origin for email links and absolute social-card metadata (Vercel builds can infer the image origin from `VERCEL_URL`). Do not use the production database for feature-branch testing.
+
 Hosted on Vercel. `vercel.json` sends every route except `/api` to `index.html` (so
 shared links work on refresh) and adds security headers. `api/send-gift.js` is the email
 function at `/api/send-gift`; run `vercel dev` to try it locally. Database setup: run the SQL files in

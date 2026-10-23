@@ -6,7 +6,7 @@ export default function Privacy() {
       title="Privacy Policy"
       meta={
         <>
-          Version 1.1.0 · Last updated: October 6, 2026
+          Version 1.2.0 · Last updated: October 23, 2026
         </>
       }
       intro="Dearly is built to be used without an account. This policy explains what that does, and doesn’t, mean for your data."
@@ -18,6 +18,9 @@ export default function Privacy() {
       <ul>
         <li>The content you enter (letter text, bouquet design, countdown date, and so on)</li>
         <li>If you choose to send by email, the recipient’s email address</li>
+        <li>If you enable an opened notice, your email address and the first opening time</li>
+        <li>If you allow replies, the recipient’s short messages and when they were sent</li>
+        <li>An optional scheduled unlock time, entered in Manila time and stored as a UTC instant</li>
         <li>A randomly generated link that lets whoever has it view what you made</li>
       </ul>
       <p>
@@ -44,6 +47,9 @@ export default function Privacy() {
       <ul>
         <li>Content you create is stored so the shareable link works</li>
         <li>An email address you provide for sending a gift is used only to send that one email, nothing else</li>
+        <li>Your sender email is stored only when you request an opened notice. Turning that option off removes it from the gift.</li>
+        <li>The recipient sees a notice before triggering an opened email. Link previews and locked-screen visits do not trigger it. A forwarded link means an opening does not prove who viewed the gift.</li>
+        <li>Replies are stored with the gift and visible through the sender’s private edit link. Anyone with the share link may reply if the sender enables this.</li>
         <li>Technical data is used only to operate and secure the site</li>
       </ul>
 
@@ -53,6 +59,8 @@ export default function Privacy() {
         these gift types (a letter, a memory timeline) is that someone can come back to them later. If you want something you made
         deleted, email <a className="text-link" href="mailto:dearly.giftsapp@gmail.com">dearly.giftsapp@gmail.com</a> with its link and it will be removed.
       </p>
+
+      <p>Replies and opening records are kept with the gift until it is deleted. Email delivery records support abuse prevention; IP-based rate-limit records are temporary. Opened email delivery may be retried after a provider failure.</p>
 
       <h2>Who else sees your data</h2>
       <p>Dearly uses a small number of outside services to run:</p>

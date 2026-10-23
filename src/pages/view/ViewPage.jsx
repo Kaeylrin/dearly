@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import Link from '../../components/ui/Link'
 import Loader from '../../components/ui/Loader'
 import { useSplashHold } from '../../lib/splash'
-import { decodePayload, fetchGift } from '../../lib/giftStore'
+import { decodePayload, fetchGift, giftEvent } from '../../lib/giftStore'
+import LockedGift from './LockedGift'
+import GiftReply from './GiftReply'
 import { useTitle } from '../../hooks/useTitle'
 import './ViewPage.css'
 
@@ -12,6 +14,10 @@ export default function ViewPage({ gift }) {
   const { id } = useParams()
   const { hash } = useLocation()
   const [state, setState] = useState({ status: 'loading' })
+  const [revision, setRevision] = useState(0)
+  const [opening, setOpening] = useState(false)
+  const [openError, setOpenError] = useState('')
+  const retry = useCallback(() => setRevision((n) => n + 1), [])
 
   useTitle(gift.viewTitle || 'Something for you')
   // Opened fresh from a shared link: keep the splash up until the gift has loaded.
@@ -24,15 +30,32 @@ export default function ViewPage({ gift }) {
       .then((res) => {
         if (cancelled) return
         if (res.type !== gift.type) throw new Error('type')
+        if (res.locked) {
+          setState({ status: 'locked', ...res })
+          return
+        }
         const data = gift.clean(res.data)
         if (gift.check(data)) throw new Error('incomplete')
-        setState({ status: 'ready', data })
+        setState({ status: res.notify_opened && !hash ? 'invitation' : 'ready', data, allowReplies: res.allow_replies })
       })
       .catch((err) => !cancelled && setState({ status: 'error', reason: err?.reason }))
     return () => {
       cancelled = true
     }
-  }, [hash, id, gift])
+  }, [hash, id, gift, revision])
+
+  if (state.status === 'locked') return <LockedGift key={`${id}-${state.server_now}`} unlockAt={state.unlock_at} serverNow={state.server_now} onRetry={retry} />
+
+  if (state.status === 'invitation') return <div className="view-status">
+    <h1>Someone made you something.</h1>
+    <p>The sender asked for a one-time email when you open this gift. Opening it will send that notice.</p>
+    <button className="btn btn-primary" disabled={opening} onClick={async () => {
+      setOpening(true); setOpenError('')
+      try { await giftEvent(id, 'open'); setState((s) => ({ ...s, status: 'ready' })) } catch (err) { setOpenError(err.message) }
+      finally { setOpening(false) }
+    }}>{opening ? 'Opening…' : 'Open my gift'}</button>
+    <p role="alert">{openError}</p>
+  </div>
 
   if (state.status === 'loading') {
     return <Loader label="Opening…" />
@@ -78,5 +101,5 @@ export default function ViewPage({ gift }) {
   }
 
   const View = gift.View
-  return <View data={state.data} id={id} />
+  return <div className="recipient-gift"><View data={state.data} id={id} />{state.allowReplies && !hash && <GiftReply id={id} />}</div>
 }
