@@ -2,6 +2,7 @@
 
 ## v1.2.0 — October 23, 2026 (testing branch)
 
+- Removed mouse-wheel scroll smoothing for more responsive native scrolling. Smooth section jumps, page transitions and gift animations remain; section jumps respect reduced motion.
 - Server-checked scheduled unlock in Manila time, with a countdown and gift content withheld until the deadline.
 - Optional recipient replies (message or emoji), read through the sender's private edit link.
 - Optional first-open email, off by default, with recipient disclosure and queued delivery retries. Sender email is stored only with consent and removed when disabled.

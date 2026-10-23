@@ -21,7 +21,7 @@ const RELEASES = [
         'Atomic email limits: three attempts per gift or IP in three hours, with Copy link always available',
         'Sender email is stored only with opened-notice consent; replies have server-side limits',
       ] },
-      { label: 'Improved', items: ['Daily database health check and retries for queued opened notices', 'Privacy policy updated for scheduling, sender emails and replies'] },
+      { label: 'Improved', items: ['Native mouse-wheel scrolling for a quicker response, while keeping smooth section jumps and other animations', 'Daily database health check and retries for queued opened notices', 'Privacy policy updated for scheduling, sender emails and replies'] },
     ],
   },
   {

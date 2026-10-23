@@ -46,9 +46,9 @@ Routes follow the PRD: `/:type/new` creates, `/:type/:id` is the link she opens.
 
 - Page changes use the browser's View Transitions: the old page fades out, the new one rises in,
   and the nav stays put. Browsers without them get a simple fade-in.
-- Wheel scrolling is eased with Lenis on desktop (`src/lib/smoothScroll.js`); phones keep
-  their native scrolling. Links within the same page ("Gifts", "Start creating") glide to
-  their section. Back/forward returns to where you were.
+- Wheel and touch scrolling use the browser's native behavior. Links within the same page
+  ("Gifts", "Start creating") glide to their section, respecting reduced motion.
+  Back/forward returns to where you were.
 - A splash shows on first load until the fonts are ready. Gift pages load on demand, with a
   thin progress bar if that takes a moment.
 - All of it switches off under "reduce motion" in the OS settings.
