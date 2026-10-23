@@ -7,7 +7,8 @@
 - Optional recipient replies (message or emoji), read through the sender's private edit link.
 - Optional first-open email, off by default, with recipient disclosure and queued delivery retries. Sender email is stored only with consent and removed when disabled.
 - Bouquet flower placement by tap, occupied-slot swaps, shuffle, and saved positions in previews and downloads.
-- Anniversary, birthday, apology and long-distance starters for letters and bouquet notes.
+- Removed occasion starters so users write their own messages without pre-generated suggestions.
+- Compacted bouquet selection into flower buttons with a selected state and a single Remove flower action; removed the repeated Place stem labels.
 - Ordered bundles of two to eight existing gifts in one link; no additional standalone gift type.
 - Static social preview image and Open Graph/Twitter metadata without private gift content.
 - Atomic server email reservations: three attempts per gift or IP per three hours, three per recipient per day; browser resets do not reset the limits. Copy link remains available.

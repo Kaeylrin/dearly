@@ -40,7 +40,7 @@ test('opened notice is disclosed and a recipient can send a reply', async ({ pag
   expect(events.map((e) => e.action)).toEqual(['open', 'reply'])
 })
 
-test('creator can use a template, schedule a gift, and leave opened notices off', async ({ page }) => {
+test('creator writes their own message, schedules a gift, and leaves opened notices off', async ({ page }) => {
   let saved
   await backend(page, (name, body) => {
     if (name === 'create_gift') { saved = body; return [{ id, edit_token: token }] }
@@ -48,27 +48,42 @@ test('creator can use a template, schedule a gift, and leave opened notices off'
   })
   await page.goto('/letter/new')
   await expect(page.getByLabel("Tell me when it's opened")).not.toBeChecked()
-  await page.getByLabel('Start with an occasion').selectOption('birthday')
-  await expect(page.getByLabel('Your letter')).toHaveValue(/Happy birthday/)
+  await expect(page.getByLabel('Start with an occasion')).toHaveCount(0)
+  await expect(page.getByLabel('Your letter')).toHaveValue('')
+  await page.getByLabel('Your letter').fill('These are my own words, just for you.')
   await page.getByLabel('Unlock date and time').fill('2026-12-25T00:00')
   await page.getByLabel('Let them reply').check()
   await page.getByRole('button', { name: 'Preview', exact: true }).click()
   await page.getByRole('button', { name: 'Looks right, get the link' }).click()
   await expect(page.getByLabel('Share link')).toHaveValue(new RegExp(`/letter/${id}$`))
   expect(saved.p_settings).toEqual({ unlockAt: '2026-12-24T16:00:00.000Z', notifyOpened: false, allowReplies: true, senderEmail: '' })
+  expect(saved.p_data.body).toBe('These are my own words, just for you.')
 })
 
 test('bouquet placement and shuffle are kept in the saved gift', async ({ page }) => {
   let saved
   await backend(page, (name, body) => { if (name === 'create_gift') { saved = body; return [{ id, edit_token: token }] } return [] })
   await page.goto('/bouquet/new')
-  await page.getByRole('button', { name: 'Place stem 1', exact: true }).click()
+  await expect(page.getByLabel('Start with an occasion')).toHaveCount(0)
+  await expect(page.getByLabel('A note on the card')).toHaveValue('')
+  for (let i = 0; i < 9; i++) {
+    await page.getByRole('button', { name: 'Add red rose', exact: true }).click()
+  }
+  const flowers = page.getByRole('list', { name: 'Flowers in your bouquet' })
+  await expect(flowers.getByRole('button')).toHaveCount(14)
+  expect((await flowers.boundingBox()).height).toBeLessThan(200)
+  await expect(page.getByRole('button', { name: /Place stem/ })).toHaveCount(0)
+  await flowers.getByRole('button', { name: 'Select red rose 1', exact: true }).click()
+  await expect(flowers.getByRole('button', { name: 'Select red rose 1', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await page.getByRole('button', { name: 'Place selected flower in spot 14', exact: true }).click()
   await page.getByRole('button', { name: 'Preview', exact: true }).click()
   await page.getByRole('button', { name: 'Looks right, get the link' }).click()
   await expect(page.getByLabel('Share link')).toBeVisible()
   expect(saved.p_data.positions[0]).toBe(13)
   await page.getByRole('button', { name: 'Keep editing' }).click()
+  await flowers.getByRole('button', { name: 'Select red rose 1', exact: true }).click()
+  await page.getByRole('button', { name: 'Remove flower', exact: true }).click()
+  await expect(flowers.getByRole('button')).toHaveCount(13)
   await page.getByRole('button', { name: 'Shuffle flowers' }).click()
   await expect(page.getByRole('button', { name: 'Shuffle flowers' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)

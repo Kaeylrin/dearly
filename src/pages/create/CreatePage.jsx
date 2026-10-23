@@ -12,7 +12,6 @@ import './CreatePage.css'
 import GiftOptions from './GiftOptions'
 import ReplyInbox from './ReplyInbox'
 import { cleanSettings, EMPTY_SETTINGS, settingsProblem } from '../../lib/giftSettings'
-import { occasionTemplates } from '../../lib/occasionTemplates'
 
 const STEPS = [
   { id: 'write', label: 'Write' },
@@ -227,11 +226,6 @@ export default function CreatePage({ gift }) {
 
       {step === 'write' && !opening && (
         <form className="create-form" onSubmit={onPreview} noValidate>
-          {occasionTemplates[gift.type] && <label className="field"><span className="field-label">Start with an occasion</span><select className="select" defaultValue="" onChange={(e) => {
-            const template = occasionTemplates[gift.type].find((t) => t.id === e.target.value)
-            if (template) setData(gift.clean({ ...data, ...template.data }))
-            e.target.value = ''
-          }}><option value="">Choose a starter (replaces the message)</option>{occasionTemplates[gift.type].map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}</select></label>}
           <Form value={data} onChange={setData} />
           <GiftOptions value={settings} onChange={setSettings} />
           <div className="create-actions">

@@ -12,7 +12,6 @@ const RELEASES = [
         'Let recipients send a short reply or emoji; read replies through your private edit link',
         'Optional first-open email, off by default, with a clear notice for the recipient',
         'Place bouquet flowers by tapping a stem and a spot, or shuffle the arrangement',
-        'Anniversary, birthday, apology and long-distance starters for letters and bouquet notes',
         'Combine two to eight existing gifts in one ordered bundle and share one link',
         'A Dearly image card when sharing links, without exposing private gift content',
       ] },
@@ -21,7 +20,7 @@ const RELEASES = [
         'Atomic email limits: three attempts per gift or IP in three hours, with Copy link always available',
         'Sender email is stored only with opened-notice consent; replies have server-side limits',
       ] },
-      { label: 'Improved', items: ['Native mouse-wheel scrolling for a quicker response, while keeping smooth section jumps and other animations', 'Daily database health check and retries for queued opened notices', 'Privacy policy updated for scheduling, sender emails and replies'] },
+      { label: 'Improved', items: ['Letters and bouquet notes start with your own words, without occasion starters', 'Compact flower controls: tap a flower to move or remove it, with no repeated stem labels', 'Native mouse-wheel scrolling for a quicker response, while keeping smooth section jumps and other animations', 'Daily database health check and retries for queued opened notices', 'Privacy policy updated for scheduling, sender emails and replies'] },
     ],
   },
   {

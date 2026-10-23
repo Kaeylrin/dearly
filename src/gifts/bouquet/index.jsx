@@ -144,26 +144,27 @@ function Form({ value, onChange }) {
         {value.flowers.length > 0 && (
           <div className="bq-current">
             <p className="field-label">In the bouquet</p>
-            <ul className="bq-chips">
+            <ul className="bq-chips" aria-label="Flowers in your bouquet">
               {value.flowers.map((v, i) => {
                 const p = parseFlower(v)
                 return (
                   <li key={i}>
-                    <button type="button" className="btn btn-quiet btn-sm" aria-pressed={selected === i} onClick={() => setSelected(i)}>Place stem {i + 1}</button>
                     <button
                       type="button"
                       className="bq-chip"
-                      onClick={() => removeAt(i)}
-                      aria-label={`Remove ${p.def.colors.length > 1 ? p.colorLabel.toLowerCase() + ' ' : ''}${p.def.label.toLowerCase()}`}
+                      onClick={() => setSelected(selected === i ? null : i)}
+                      aria-pressed={selected === i}
+                      aria-label={`Select ${p.def.colors.length > 1 ? p.colorLabel.toLowerCase() + ' ' : ''}${p.def.label.toLowerCase()} ${i + 1}`}
+                      title={`${p.colorLabel} ${p.def.label.toLowerCase()}`}
                     >
                       <FlowerIcon value={v} />
-                      <span aria-hidden="true">×</span>
                     </button>
                   </li>
                 )
               })}
             </ul>
-            <p role="status" className="form-note">{selected !== null ? `Choose a numbered spot for stem ${selected + 1}. Occupied spots swap flowers.` : 'Select a stem to move it, or add another flower.'}</p>
+            <p role="status" className="form-note">{selected !== null ? 'Choose a spot on the bouquet, or remove this flower.' : 'Tap a flower to move or remove it.'}</p>
+            {selected !== null && <button type="button" className="btn btn-line btn-sm" onClick={() => removeAt(selected)}>Remove flower</button>}
             <button type="button" className="btn btn-line btn-sm" onClick={() => { set({ positions: shuffledPositions(value.flowers.length) }); setSelected(null) }}>Shuffle flowers</button>
             <button type="button" className="btn btn-quiet btn-sm" onClick={() => { set({ flowers: [], positions: [] }); setSelected(null) }}>
               Clear flowers
@@ -202,7 +203,7 @@ function Form({ value, onChange }) {
           hint="Optional"
           multiline
           rows={3}
-          placeholder="These never wilt. Neither does this."
+          placeholder="Write your own note"
           value={value.note}
           onChange={(v) => set({ note: v })}
           max={LIMITS.note}
