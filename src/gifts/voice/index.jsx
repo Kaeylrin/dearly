@@ -47,6 +47,7 @@ function Recorder({ value, onChange }) {
   const timer = useRef(null)
   const started = useRef(0)
   const stream = useRef(null)
+  const mounted = useRef(false)
   // Latest form value, so a recording that finishes doesn't overwrite edits made meanwhile.
   const valueRef = useRef(value)
   useEffect(() => {
@@ -59,7 +60,18 @@ function Recorder({ value, onChange }) {
     stream.current?.getTracks().forEach((t) => t.stop())
     stream.current = null
   }
-  useEffect(() => cleanup, [])
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      if (rec.current) {
+        rec.current.onstop = null
+        rec.current.onerror = null
+        if (rec.current.state !== 'inactive') rec.current.stop()
+      }
+      cleanup()
+    }
+  }, [])
 
   const stop = () => {
     if (rec.current?.state === 'recording') rec.current.stop()
@@ -69,26 +81,39 @@ function Recorder({ value, onChange }) {
     setError('')
     setState('asking')
     try {
-      stream.current = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const input = await navigator.mediaDevices.getUserMedia({ audio: true })
+      if (!mounted.current) { input.getTracks().forEach((track) => track.stop()); return }
+      stream.current = input
     } catch {
-      setState('idle')
-      setError('Dearly couldn’t use the microphone. Check that it’s allowed for this site, or upload a recording instead.')
+      if (mounted.current) {
+        setState('idle')
+        setError('Dearly couldn’t use the microphone. Check that it’s allowed for this site, or upload a recording instead.')
+      }
       return
     }
     const mimeType = pickMime()
     const chunks = []
-    const recorder = new MediaRecorder(stream.current, { ...(mimeType ? { mimeType } : {}), audioBitsPerSecond: 24000 })
+    let recorder
+    try {
+      recorder = new MediaRecorder(stream.current, { ...(mimeType ? { mimeType } : {}), audioBitsPerSecond: 24000 })
+    } catch {
+      cleanup()
+      setState('idle')
+      setError('This browser could not start recording. Try uploading an audio file instead.')
+      return
+    }
     rec.current = recorder
     recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data)
     recorder.onstop = async () => {
       const seconds = (Date.now() - started.current) / 1000
       cleanup()
+      if (!mounted.current) return
       setState('saving')
       try {
         const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
         const audio = await blobToDataUrl(blob)
         if (audio.length > AUDIO_CHARS) throw new Error('too long')
-        onChange({ ...valueRef.current, audio, duration: Math.round(seconds) })
+        if (mounted.current) onChange({ ...valueRef.current, audio, duration: Math.round(seconds) })
       } catch {
         setError('That recording came out too large. Try a shorter one.')
       }
@@ -96,7 +121,20 @@ function Recorder({ value, onChange }) {
       setElapsed(0)
     }
     started.current = Date.now()
-    recorder.start(250)
+    recorder.onerror = () => {
+      recorder.onstop = null
+      cleanup()
+      if (mounted.current) {
+        setState('idle')
+        setError('Recording stopped unexpectedly. Please try again or upload a file.')
+      }
+    }
+    try { recorder.start(250) } catch {
+      cleanup()
+      setState('idle')
+      setError('Recording could not start. Please try again or upload a file.')
+      return
+    }
     setState('recording')
     timer.current = setInterval(() => {
       const s = (Date.now() - started.current) / 1000
@@ -112,15 +150,29 @@ function Recorder({ value, onChange }) {
     setError('')
     if (!file.type.startsWith('audio/')) return setError('That file isn’t an audio file.')
     if (file.size > MAX_UPLOAD) return setError('That file is too large. Keep uploads under 400 KB (about 30–60 seconds).')
-    const audio = await blobToDataUrl(file)
-    const duration = await new Promise((resolve) => {
-      const a = new Audio()
-      a.preload = 'metadata'
-      a.onloadedmetadata = () => resolve(Number.isFinite(a.duration) ? Math.round(a.duration) : 0)
-      a.onerror = () => resolve(0)
-      a.src = audio
-    })
-    onChange({ ...value, audio, duration })
+    try {
+      const audio = await blobToDataUrl(file)
+      const duration = await new Promise((resolve, reject) => {
+        const a = new Audio()
+        const finish = (error) => {
+          clearTimeout(timeout)
+          a.onloadedmetadata = null
+          a.onerror = null
+          if (error) reject(new Error('Could not read this audio. Try another recording.'))
+          else resolve(Number.isFinite(a.duration) ? Math.round(a.duration) : 0)
+          a.removeAttribute('src')
+          a.load()
+        }
+        const timeout = setTimeout(() => finish(true), 5000)
+        a.preload = 'metadata'
+        a.onloadedmetadata = () => finish(false)
+        a.onerror = () => finish(true)
+        a.src = audio
+      })
+      if (mounted.current) onChange({ ...valueRef.current, audio, duration })
+    } catch (err) {
+      if (mounted.current) setError(err.message || 'Could not use that recording. Please try again.')
+    }
   }
 
   const recording = state === 'recording'

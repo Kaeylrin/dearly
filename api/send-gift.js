@@ -18,8 +18,8 @@
  *   PUBLIC_SITE_URL  optional, e.g. https://dearly.app (defaults to the request host)
  */
 
-import nodemailer from 'nodemailer'
-import { rpc } from '../server/backend.js'
+import { json, rpc, sameOrigin, trustedIp } from '../server/backend.js'
+import { sendMail } from '../server/mail.js'
 
 const ID_RE = /^[A-Za-z0-9]{10}$/
 const TOKEN_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -41,9 +41,6 @@ function siteUrl(req) {
   if (process.env.PUBLIC_SITE_URL) return process.env.PUBLIC_SITE_URL.replace(/\/+$/, '')
   return new URL(req.url).origin
 }
-
-const json = (status, body, headers = {}) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers } })
 
 function emailHtml({ fromName, note, url }) {
   const from = escapeHtml(fromName)
@@ -67,33 +64,6 @@ function emailHtml({ fromName, note, url }) {
 </body></html>`
 }
 
-async function sendMail({ useResend, to, subject, html, text, fromName }) {
-  if (useResend) {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject, html, text }),
-    })
-    if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`)
-    return
-  }
-  const user = process.env.GMAIL_USER
-  const transport = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user, pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '') },
-  })
-  // Gmail requires the account itself as sender; the sender's name shows in the display name.
-  await transport.sendMail({
-    from: { name: `${fromName.replace(/["<>]/g, '')} via Dearly`, address: user },
-    to,
-    subject,
-    html,
-    text,
-  })
-}
-
 /* Only POST is exported; Vercel answers other methods with 405. */
 export async function POST(req) {
   if (req.method !== 'POST') {
@@ -109,12 +79,13 @@ export async function POST(req) {
 
   // Browsers always send Origin on cross-site POSTs; reject other sites calling this.
   // The page calling us must be this deployment (or the configured public URL).
-  const origin = req.headers.get('origin')
-  if (origin && origin !== new URL(req.url).origin && origin !== siteUrl(req)) return json(403, { error: 'Not allowed.' })
+  if (!sameOrigin(req)) return json(403, { error: 'Not allowed.' })
 
   let body
+  const raw = await req.text()
+  if (raw.length > 8192) return json(413, { error: 'This email request is too large.' })
   try {
-    body = JSON.parse((await req.text()) || '{}')
+    body = JSON.parse(raw || '{}')
     if (!body || typeof body !== 'object') throw new Error('not an object')
   } catch {
     return json(400, { error: 'Bad request.' })
@@ -123,7 +94,7 @@ export async function POST(req) {
   if (body.website) return json(200, { ok: true })
 
   // Vercel's edge sets x-real-ip from the connection and overwrites any client-sent value.
-  const ip = req.headers.get('x-real-ip') || null
+  const ip = trustedIp(req)
   const id = clean(body.id, 10)
   const token = clean(body.token, 36)
   const to = clean(body.to, 254).toLowerCase()
@@ -142,9 +113,9 @@ export async function POST(req) {
     const text = `${fromName} made you something on Dearly.${note ? `\n\n“${note}”` : ''}\n\nOpen it: ${url}\n`
 
     try {
-      await sendMail({ useResend, to, subject, html: emailHtml({ fromName, note, url }), text, fromName })
-    } catch (err) {
-      console.error('send-gift: mail', err)
+      await sendMail({ to, subject, html: emailHtml({ fromName, note, url }), text, fromName })
+    } catch {
+      console.error('send-gift: mail provider failed')
       return json(502, { error: 'The email couldn’t be sent. Please try again in a moment.' })
     }
 

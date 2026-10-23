@@ -13,6 +13,10 @@ import './ViewPage.css'
 export default function ViewPage({ gift }) {
   const { id } = useParams()
   const { hash } = useLocation()
+  return <GiftRecipient key={`${id}:${hash}`} gift={gift} id={id} hash={hash} />
+}
+
+function GiftRecipient({ gift, id, hash }) {
   const [state, setState] = useState({ status: 'loading' })
   const [revision, setRevision] = useState(0)
   const [opening, setOpening] = useState(false)

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { TextField } from '../components/ui/fields'
 import { text } from '../lib/validate'
 import { catalogByType } from './catalog'
+import './bundle.css'
 
 // A bundle embeds existing gifts in order; it never nests bundles or exposes edit keys.
 export default function makeBundle(modules) {
@@ -25,7 +26,8 @@ export default function makeBundle(modules) {
   }
   function Form({ value, onChange }) {
     const [active, setActive] = useState(0)
-    const entry = value.items[active]
+    const current = Math.min(active, value.items.length - 1)
+    const entry = value.items[current]
     const Editor = entry && modules[entry.type].Form
     const replaceItems = (items) => { onChange({ ...value, items }); setActive(Math.min(active, items.length - 1)) }
     const move = (i, by) => {
@@ -46,19 +48,24 @@ export default function makeBundle(modules) {
         if (!modules[e.target.value]) return
         replaceItems([...value.items, item(e.target.value)]); setActive(value.items.length)
       }}><option value="">Choose a gift (up to eight)</option>{types.map((type) => <option key={type} value={type}>{catalogByType[type].title}</option>)}</select></label>
-      {entry && <section className="bundle-editor"><h2 className="form-section-title">Gift {active + 1}: {catalogByType[entry.type].title}</h2><Editor key={`${active}-${entry.type}`} value={entry.data} onChange={(data) => onChange({ ...value, items: value.items.map((part, i) => i === active ? { ...part, data } : part) })} /></section>}
+      {entry && <section className="bundle-editor"><h2 className="form-section-title">Gift {current + 1}: {catalogByType[entry.type].title}</h2><Editor key={`${current}-${entry.type}`} value={entry.data} onChange={(data) => onChange({ ...value, items: value.items.map((part, i) => i === current ? { ...part, data } : part) })} /></section>}
     </div>
   }
   function View({ data, preview }) {
     const [active, setActive] = useState(0)
-    const entry = data.items[Math.min(active, data.items.length - 1)]
-    if (!entry) return null
-    const GiftView = modules[entry.type].View
-    return <div className="bundle-view">
+    const viewRef = useRef(null)
+    const navigate = (next) => {
+      viewRef.current?.querySelectorAll('audio').forEach((audio) => audio.pause())
+      setActive(next)
+    }
+    return <div className="bundle-view" ref={viewRef}>
       {data.title && <h1 className="gv-title">{data.title}</h1>}
       <p className="eyebrow" aria-live="polite">Gift {active + 1} of {data.items.length}</p>
-      <GiftView key={active} data={entry.data} preview={preview} />
-      <nav className="bundle-navigation" aria-label="Gifts in this bundle"><button type="button" className="btn btn-line" disabled={active === 0} onClick={() => setActive(active - 1)}>Previous gift</button><button type="button" className="btn btn-primary" disabled={active >= data.items.length - 1} onClick={() => setActive(active + 1)}>Next gift</button></nav>
+      {data.items.map((entry, i) => {
+        const GiftView = modules[entry.type].View
+        return <div key={i} hidden={active !== i}><GiftView data={entry.data} preview={preview} /></div>
+      })}
+      <nav className="bundle-navigation" aria-label="Gifts in this bundle"><button type="button" className="btn btn-line" disabled={active === 0} onClick={() => navigate(active - 1)}>Previous gift</button><button type="button" className="btn btn-primary" disabled={active >= data.items.length - 1} onClick={() => navigate(active + 1)}>Next gift</button></nav>
     </div>
   }
   return { type: 'bundle', headline: 'A few little things, one lovely link.', viewTitle: 'A bundle for you', empty, clean, finalize, check, Form, View }

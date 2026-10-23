@@ -17,8 +17,8 @@ function loadImage(src) {
 }
 
 /*
- * Photos travel inside the gift link, so they are scaled down hard: longest
- * side `max` px, JPEG. A typical phone photo ends up around 20–40 KB.
+ * Scale photos before upload or embedding in legacy links: longest side
+ * `max` px, JPEG. A typical phone photo ends up around 20–40 KB.
  */
 export async function shrinkPhoto(file, max = 560, quality = 0.62) {
   if (!file.type.startsWith('image/')) throw new Error('That file isn’t an image.')

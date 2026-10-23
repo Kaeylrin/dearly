@@ -4,7 +4,8 @@
  * React escapes text on render; these keep shapes and sizes sane.
  */
 
-import { MEDIA_PREFIX } from './supabase'
+import { hasBackend, MEDIA_PREFIX } from './supabase'
+import { isCalendarDate } from './dates'
 
 export function text(value, max) {
   if (typeof value !== 'string') return ''
@@ -35,7 +36,7 @@ const MEDIA_EXT = {
 /* An inline data: URL, or a file already uploaded to the gift-media bucket. */
 export function dataUrl(value, mimePrefix, maxChars) {
   if (typeof value !== 'string') return ''
-  if (MEDIA_PREFIX.startsWith('https://') && value.startsWith(MEDIA_PREFIX)) {
+  if (hasBackend && value.startsWith(MEDIA_PREFIX)) {
     const name = value.slice(MEDIA_PREFIX.length)
     const ok = new RegExp(`^[0-9a-f-]{36}\\.(${MEDIA_EXT[mimePrefix] || 'x^'})$`)
     return ok.test(name) ? value : ''
@@ -46,5 +47,5 @@ export function dataUrl(value, mimePrefix, maxChars) {
 }
 
 export function isoDate(value) {
-  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : ''
+  return isCalendarDate(value) ? value : ''
 }

@@ -2,6 +2,7 @@ import { json, rpc, sameOrigin, trustedIp } from '../server/backend.js'
 import { deliverOpenedNotices } from '../server/notifications.js'
 
 export async function POST(req) {
+  if (req.method !== 'POST') return json(405, { error: 'Method not allowed.' }, { Allow: 'POST' })
   if (!sameOrigin(req)) return json(403, { error: 'Not allowed.' })
   try {
     const raw = await req.text()

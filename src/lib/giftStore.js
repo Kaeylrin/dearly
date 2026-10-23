@@ -52,7 +52,8 @@ async function encodePayload(type, data) {
 }
 
 export async function decodePayload(raw) {
-  const str = decodeURIComponent(raw.replace(/^#/, '').trim())
+  let str
+  try { str = decodeURIComponent(raw.replace(/^#/, '').trim()) } catch { throw new GiftLinkError('corrupt') }
   if (!str) throw new GiftLinkError('empty')
   const kind = str[0]
   const body = str.slice(1)
@@ -183,6 +184,7 @@ async function saveToDatabase(type, data, existing, settings) {
     const { data: ok, error } = await supabase.rpc('update_gift', { p_id: existing.id, p_token: existing.token, p_data: stored, p_settings: settings })
     if (error) throw error
     if (ok) return { ...linksFor(type, existing.id, existing.token), data: stored }
+    throw new Error('This edit link no longer works. Start a new gift to get a fresh link.')
   }
   const { data: rows, error } = await supabase.rpc('create_gift', { p_type: type, p_data: stored, p_settings: settings })
   if (error) throw error
@@ -191,10 +193,10 @@ async function saveToDatabase(type, data, existing, settings) {
   return { ...linksFor(type, row.id, row.edit_token), data: stored }
 }
 
-/* Recipient view. `count` is off for the sender opening their own preview. */
-export async function fetchGift(id, { count = false } = {}) {
+/* Read-only recipient fetch. Opens are recorded by the explicit gift action. */
+export async function fetchGift(id) {
   if (!hasBackend || !ID_RE.test(id || '')) throw new GiftLinkError('missing')
-  const { data: rows, error } = await supabase.rpc('get_gift', { p_id: id, p_count: count })
+  const { data: rows, error } = await supabase.rpc('get_gift', { p_id: id, p_count: false })
   if (error) throw new GiftLinkError('network')
   if (!rows?.[0]) throw new GiftLinkError('missing')
   return rows[0]

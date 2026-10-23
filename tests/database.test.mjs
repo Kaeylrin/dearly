@@ -1,27 +1,9 @@
-import { PGlite } from '@electric-sql/pglite'
-import { readFile } from 'node:fs/promises'
+import { createTestDatabase } from './helpers/database.mjs'
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 
 let db
-before(async () => {
-  db = new PGlite()
-  // Supabase roles/storage fixtures. Only random-byte generation is substituted;
-  // all production tables, policies and PL/pgSQL functions run unmodified.
-  await db.exec(`
-    create role anon; create role authenticated; create role service_role bypassrls;
-    create schema extensions;
-    create function extensions.gen_random_bytes(n int) returns bytea language sql as $$ select decode(string_agg(md5(random()::text), ''), 'hex') from generate_series(1, n) $$;
-    create schema storage;
-    create table storage.buckets(id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
-    create table storage.objects(bucket_id text, name text);
-    alter table storage.objects enable row level security;
-  `)
-  for (const file of ['001_gifts.sql', '002_security.sql', '003_personal_gifting.sql']) {
-    const sql = await readFile(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8')
-    await db.exec(sql.replace('create extension if not exists pgcrypto with schema extensions;', ''))
-  }
-})
+before(async () => { db = await createTestDatabase() })
 after(async () => db?.close())
 const query = async (sql, args = []) => (await db.query(sql, args)).rows
 const create = async (settings = {}, type = 'letter', data = { body: 'A secret keepsake.' }) => (await query('select * from create_gift($1, $2, $3)', [type, JSON.stringify(data), JSON.stringify(settings)]))[0]
@@ -94,4 +76,16 @@ test('legacy RPC arguments still work; anonymous users cannot access data tables
     await assert.rejects(query("select record_gift_event($1,'open','','ip')", [gift.id]), /permission denied/)
     await assert.rejects(query('select * from claim_opened_notifications(null)'), /permission denied/)
   } finally { await db.exec('reset role') }
+})
+
+test('old edit calls preserve options and opt-out prevents pending notice delivery', async () => {
+  const gift = await create({ notifyOpened: true, senderEmail: 'pending@example.com', allowReplies: true })
+  await query('select update_gift($1,$2,$3)', [gift.id, gift.edit_token, '{"body":"Edited"}'])
+  assert.equal((await query('select * from get_gift_for_edit($1,$2)', [gift.id, gift.edit_token]))[0].settings.notifyOpened, true)
+  await query("select record_gift_event($1,'open','','ip-optout')", [gift.id])
+  await query('select update_gift($1,$2,$3,$4)', [gift.id, gift.edit_token, '{"body":"Edited"}', '{}'])
+  assert.equal((await query('select * from claim_opened_notifications($1)', [gift.id])).length, 0)
+  const count = (await query('select count(*)::int as count from gifts'))[0].count
+  await assert.rejects(create({ notifyOpened: true, senderEmail: '' }), /invalid_sender_email/)
+  assert.equal((await query('select count(*)::int as count from gifts'))[0].count, count)
 })

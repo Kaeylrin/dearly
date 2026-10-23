@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { TextField } from '../../components/ui/fields'
 import { text } from '../../lib/validate'
+import { isCalendarDate, shiftCalendarMonths } from '../../lib/dates'
 import './countdown.css'
 
 const LIMITS = { title: 80, message: 400, from: 60 }
@@ -23,17 +24,18 @@ function empty() {
 
 /* The target is stored as a UTC instant, computed in the sender's timezone. */
 function toTarget(date, time) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return ''
+  if (!isCalendarDate(date)) return ''
   const t = /^\d{2}:\d{2}$/.test(time) ? time : '00:00'
   const d = new Date(`${date}T${t}`)
   return Number.isNaN(d.getTime()) ? '' : d.toISOString()
 }
 
 function clean(d = {}) {
-  const target = typeof d.target === 'string' && !Number.isNaN(Date.parse(d.target)) ? new Date(d.target).toISOString() : ''
+  const instant = typeof d.target === 'string' && Number.isFinite(Date.parse(d.target)) ? new Date(d.target).toISOString() : ''
+  const target = isCalendarDate(instant.slice(0, 10)) ? instant : ''
   return {
     title: text(d.title, LIMITS.title),
-    date: typeof d.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.date) ? d.date : '',
+    date: isCalendarDate(d.date) ? d.date : '',
     time: typeof d.time === 'string' && /^\d{2}:\d{2}$/.test(d.time) ? d.time : '',
     target,
     tz: text(d.tz, 64),
@@ -48,17 +50,6 @@ function check(d) {
   return null
 }
 
-/* Same day-of-month, n months later; clamps the 31st to the end of shorter months. */
-function addMonths(date, n) {
-  const d = new Date(date)
-  const day = d.getUTCDate()
-  d.setUTCDate(1)
-  d.setUTCMonth(d.getUTCMonth() + n)
-  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate()
-  d.setUTCDate(Math.min(day, last))
-  return d
-}
-
 /*
  * Returns the moment to count towards and whether we're inside the 24 hours
  * after an occurrence (when the "it's here" message shows).
@@ -66,12 +57,14 @@ function addMonths(date, n) {
 function resolve(data, now) {
   const base = new Date(data.target)
   if (!data.monthly) return { target: base, arrived: now >= base }
-  let occ = base
-  let n = 0
-  while (addMonths(base, n + 1) <= now) n++
-  occ = addMonths(base, n)
+  const addMonths = (n) => shiftCalendarMonths(base, n, data.tz)
+  // Jump to the current month instead of looping once for every elapsed month.
+  let n = Math.max(0, (now.getUTCFullYear() - base.getUTCFullYear()) * 12 + now.getUTCMonth() - base.getUTCMonth())
+  if (n > 0 && addMonths(n) > now) n--
+  if (addMonths(n + 1) <= now) n++
+  const occ = addMonths(n)
   if (now >= occ && now - occ < DAY) return { target: occ, arrived: true }
-  return { target: now < base ? base : addMonths(base, n + 1), arrived: false }
+  return { target: now < base ? base : addMonths(n + 1), arrived: false }
 }
 
 function split(ms) {

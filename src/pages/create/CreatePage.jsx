@@ -74,6 +74,7 @@ export default function CreatePage({ gift }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [data, setData] = useState(() => loadDraft(gift))
+  const [formRevision, setFormRevision] = useState(0)
   const [settings, setSettings] = useState(() => {
     try { return cleanSettings(JSON.parse(localStorage.getItem(`dearly-options-${gift.type}`) || '{}')) } catch { return { ...EMPTY_SETTINGS } }
   })
@@ -108,7 +109,12 @@ export default function CreatePage({ gift }) {
         setStep('write')
       })
       .catch(() => {
-        if (!cancelled) setError('That edit link didn’t open, so you’re starting fresh.')
+        if (cancelled) return
+        setData(gift.empty())
+        setSettings({ ...EMPTY_SETTINGS })
+        setSaved(null)
+        storeSaved(gift.type, null)
+        setError('That edit link didn’t open, so you’re starting fresh.')
       })
       .finally(() => {
         if (cancelled) return
@@ -174,6 +180,7 @@ export default function CreatePage({ gift }) {
   }
 
   const startOver = () => {
+    setFormRevision((revision) => revision + 1)
     setData(gift.empty())
     setSettings({ ...EMPTY_SETTINGS })
     setLinks(null)
@@ -209,7 +216,7 @@ export default function CreatePage({ gift }) {
           return (
             <li key={s.id} className={`step${i === stepIndex ? ' is-current' : ''}${i < stepIndex ? ' is-done' : ''}`}>
               {reachable ? (
-                <button type="button" onClick={() => goTo(s.id)}>
+                <button type="button" onClick={() => goTo(s.id)} disabled={busy}>
                   <span className="step-num">{String(i + 1).padStart(2, '0')}</span> {s.label}
                 </button>
               ) : (
@@ -226,7 +233,7 @@ export default function CreatePage({ gift }) {
 
       {step === 'write' && !opening && (
         <form className="create-form" onSubmit={onPreview} noValidate>
-          <Form value={data} onChange={setData} />
+          <Form key={formRevision} value={data} onChange={setData} />
           <GiftOptions value={settings} onChange={setSettings} />
           <div className="create-actions">
             <button type="submit" className="btn btn-primary">
@@ -252,7 +259,7 @@ export default function CreatePage({ gift }) {
             <button type="button" className="btn btn-primary" onClick={onCreate} disabled={busy}>
               {busy ? 'Saving…' : saved ? 'Save changes' : 'Looks right, get the link'}
             </button>
-            <button type="button" className="btn btn-line" onClick={() => goTo('write')}>
+            <button type="button" className="btn btn-line" onClick={() => goTo('write')} disabled={busy}>
               Back to editing
             </button>
             <p className="form-error" role="alert">

@@ -15,6 +15,11 @@
 - Protected daily database health check and notification retry job; quiet-week acceptance check documented for testing.
 - Privacy policy, version display and automated database/API/mobile browser checks updated.
 - Existing friendly gift-not-found and network retry screens retained and covered by browser tests.
+- Review fixes: invalid edit links cannot reuse another gift's ownership; failed updates no longer silently create a new link; clearing a form resets its internal controls.
+- Bundles preserve quiz/scratch progress between gifts and pause audio when navigating away. Recipient state resets when switching share links.
+- Calendar validation rejects impossible dates; monthly countdowns preserve the sender's local day/time across short months and daylight saving changes.
+- Local-backend media links reopen correctly; audio errors are handled, and microphone streams are released on failures and navigation.
+- Consolidated shared email delivery and bundle styles, removed an empty helper folder and two unused 512px favicon exports, added service timeouts and request limits, and updated Vite to 8.3.5 to resolve dependency advisories.
 - Version bumped from 1.1.0 to 1.2.0 as an additive minor release. Main remains unmerged for acceptance testing.
 
 ## v1.1.0 — October 6, 2026

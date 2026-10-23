@@ -58,7 +58,7 @@ Routes follow the PRD: `/:type/new` creates, `/:type/:id` is the link she opens.
 Gifts live in Supabase. The share link carries only the gift's id (`/letter/k3J9xQ2a`); the
 sender's edit link also carries a secret key (`/letter/new?edit=…&key=…`). Photos and voice
 notes are uploaded to the `gift-media` storage bucket. The browser only talks to the database
-through four functions (create, open, open for editing, save), with rate limits; see
+through restricted database functions, with rate limits; see
 `supabase/migrations`. Links made before v1.1.0, which carry the whole gift after the `#`,
 still open.
 
@@ -80,5 +80,5 @@ instead of Gmail once a domain is verified), `PUBLIC_SITE_URL`.
 
 - `public/brand/wordmark-*.png`: transparent, cropped wordmarks for the nav, footer and splash
   (dark ink in light mode, cream ink in dark mode)
-- `public/icons/favicon-*-{32,180,512}.png`: favicons with rounded corners (the 180px Apple
+- `public/icons/favicon-*-{32,180}.png`: favicons with rounded corners (the 180px Apple
   icon stays square); the dark tile is used in dark mode
