@@ -1,6 +1,6 @@
 # Dearly — Changelog
 
-## v1.2.0 — October 23, 2026 (testing branch)
+## v1.2.0 — October 23, 2026
 
 - Removed mouse-wheel scroll smoothing for more responsive native scrolling. Smooth section jumps, page transitions and gift animations remain; section jumps respect reduced motion.
 - Server-checked scheduled unlock in Manila time, with a countdown and gift content withheld until the deadline.
@@ -20,7 +20,7 @@
 - Calendar validation rejects impossible dates; monthly countdowns preserve the sender's local day/time across short months and daylight saving changes.
 - Local-backend media links reopen correctly; audio errors are handled, and microphone streams are released on failures and navigation.
 - Consolidated shared email delivery and bundle styles, removed an empty helper folder and two unused 512px favicon exports, added service timeouts and request limits, and updated Vite to 8.3.5 to resolve dependency advisories.
-- Version bumped from 1.1.0 to 1.2.0 as an additive minor release. Main remains unmerged for acceptance testing.
+- Version bumped from 1.1.0 to 1.2.0 as an additive minor release.
 
 ## v1.1.0 — October 6, 2026
 
