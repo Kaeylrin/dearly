@@ -46,9 +46,9 @@ Routes follow the PRD: `/:type/new` creates, `/:type/:id` is the link she opens.
 
 - Page changes use the browser's View Transitions: the old page fades out, the new one rises in,
   and the nav stays put. Browsers without them get a simple fade-in.
-- Wheel scrolling is eased with Lenis on desktop (`src/lib/smoothScroll.js`); phones keep
-  their native scrolling. Links within the same page ("Gifts", "Start creating") glide to
-  their section. Back/forward returns to where you were.
+- Wheel and touch scrolling use the browser's native behavior. Links within the same page
+  ("Gifts", "Start creating") glide to their section, respecting reduced motion.
+  Back/forward returns to where you were.
 - A splash shows on first load until the fonts are ready. Gift pages load on demand, with a
   thin progress bar if that takes a moment.
 - All of it switches off under "reduce motion" in the OS settings.
@@ -58,11 +58,13 @@ Routes follow the PRD: `/:type/new` creates, `/:type/:id` is the link she opens.
 Gifts live in Supabase. The share link carries only the gift's id (`/letter/k3J9xQ2a`); the
 sender's edit link also carries a secret key (`/letter/new?edit=…&key=…`). Photos and voice
 notes are uploaded to the `gift-media` storage bucket. The browser only talks to the database
-through four functions (create, open, open for editing, save), with rate limits; see
+through restricted database functions, with rate limits; see
 `supabase/migrations`. Links made before v1.1.0, which carry the whole gift after the `#`,
 still open.
 
 ## Deploying
+
+For v1.2.0, see [the isolated testing checklist](docs/v1.2.0-testing.md) before merging. Migration `003_personal_gifting.sql` adds server-gated scheduling, private replies, optional opened-email consent, bundles and atomic email reservations. Set `CRON_SECRET` for the protected daily maintenance job. Set `PUBLIC_SITE_URL` to the deployment's origin for email links and absolute social-card metadata (Vercel builds can infer the image origin from `VERCEL_URL`). Do not use the production database for feature-branch testing.
 
 Hosted on Vercel. `vercel.json` sends every route except `/api` to `index.html` (so
 shared links work on refresh) and adds security headers. `api/send-gift.js` is the email
@@ -78,5 +80,5 @@ instead of Gmail once a domain is verified), `PUBLIC_SITE_URL`.
 
 - `public/brand/wordmark-*.png`: transparent, cropped wordmarks for the nav, footer and splash
   (dark ink in light mode, cream ink in dark mode)
-- `public/icons/favicon-*-{32,180,512}.png`: favicons with rounded corners (the 180px Apple
+- `public/icons/favicon-*-{32,180}.png`: favicons with rounded corners (the 180px Apple
   icon stays square); the dark tile is used in dark mode

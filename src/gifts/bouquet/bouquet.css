@@ -181,32 +181,15 @@
   height: 30px;
 }
 
-.bq-chip span {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--bg);
-  font-size: 0.8rem;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.2s var(--ease);
+.bq-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
-.bq-chip:hover span,
-.bq-chip:focus-visible span {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .bq-chip span {
-    opacity: 1;
-  }
+.bq-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* wrap style cards, each a small live preview */
@@ -342,3 +325,9 @@
     max-width: 230px;
   }
 }
+.bq-arrangement { position: relative; max-width: 300px; margin: 0 auto; }
+.bq-placement { position: absolute; inset: 0 0 auto; aspect-ratio: 320 / 420; pointer-events: none; }
+.bq-spot { position: absolute; transform: translate(-50%, -50%); width: 32px; height: 32px; border: 1px solid var(--accent); border-radius: 50%; background: var(--paper); color: var(--accent); font: inherit; font-size: 12px; pointer-events: auto; cursor: pointer; }
+.bq-spot:disabled { visibility: hidden; }
+.bq-spot:hover, .bq-spot:focus-visible { outline: 3px solid var(--accent-soft); }
+@media (max-width: 640px) { .bq-arrangement { max-width: 230px; } }

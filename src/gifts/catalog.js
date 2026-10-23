@@ -43,3 +43,4 @@ export const catalog = [
 ]
 
 export const catalogByType = Object.fromEntries(catalog.map((g) => [g.type, g]))
+catalogByType.bundle = { type: 'bundle', title: 'A gift bundle', blurb: 'Combine two to eight of the gifts you already love, arranged in your own order.' }

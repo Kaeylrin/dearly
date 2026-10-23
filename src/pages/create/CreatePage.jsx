@@ -9,6 +9,9 @@ import { useTitle } from '../../hooks/useTitle'
 import { scrollToTarget } from '../../lib/smoothScroll'
 import SharePanel from './SharePanel'
 import './CreatePage.css'
+import GiftOptions from './GiftOptions'
+import ReplyInbox from './ReplyInbox'
+import { cleanSettings, EMPTY_SETTINGS, settingsProblem } from '../../lib/giftSettings'
 
 const STEPS = [
   { id: 'write', label: 'Write' },
@@ -71,6 +74,10 @@ export default function CreatePage({ gift }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [data, setData] = useState(() => loadDraft(gift))
+  const [formRevision, setFormRevision] = useState(0)
+  const [settings, setSettings] = useState(() => {
+    try { return cleanSettings(JSON.parse(localStorage.getItem(`dearly-options-${gift.type}`) || '{}')) } catch { return { ...EMPTY_SETTINGS } }
+  })
   const [step, setStep] = useState('write')
   const [error, setError] = useState('')
   const [links, setLinks] = useState(null)
@@ -94,6 +101,7 @@ export default function CreatePage({ gift }) {
       .then((res) => {
         if (cancelled || res.type !== gift.type) return
         setData(gift.clean(res.data))
+        setSettings(cleanSettings(res.settings))
         if (edit) {
           setSaved(edit)
           storeSaved(gift.type, edit)
@@ -101,7 +109,12 @@ export default function CreatePage({ gift }) {
         setStep('write')
       })
       .catch(() => {
-        if (!cancelled) setError('That edit link didn’t open, so you’re starting fresh.')
+        if (cancelled) return
+        setData(gift.empty())
+        setSettings({ ...EMPTY_SETTINGS })
+        setSaved(null)
+        storeSaved(gift.type, null)
+        setError('That edit link didn’t open, so you’re starting fresh.')
       })
       .finally(() => {
         if (cancelled) return
@@ -118,12 +131,13 @@ export default function CreatePage({ gift }) {
     const t = setTimeout(() => {
       try {
         localStorage.setItem(draftKey(gift.type), JSON.stringify(data))
+        localStorage.setItem(`dearly-options-${gift.type}`, JSON.stringify(settings))
       } catch {
         /* quota exceeded (large photos/audio): the draft just isn't kept */
       }
     }, 400)
     return () => clearTimeout(t)
-  }, [data, gift.type])
+  }, [data, settings, gift.type])
 
   const goTo = (next) => {
     setStep(next)
@@ -133,7 +147,7 @@ export default function CreatePage({ gift }) {
 
   const onPreview = (e) => {
     e?.preventDefault()
-    const problem = gift.check(ready(gift, data))
+    const problem = gift.check(ready(gift, data)) || settingsProblem(settings)
     if (problem) {
       setError(problem)
       return
@@ -144,7 +158,7 @@ export default function CreatePage({ gift }) {
   const onCreate = async () => {
     setBusy(true)
     try {
-      const res = await saveGift(gift.type, ready(gift, data), saved)
+      const res = await saveGift(gift.type, ready(gift, data), saved, cleanSettings(settings))
       setLinks(res)
       // Keep uploaded media URLs so saving again doesn't re-upload.
       setData(gift.clean(res.data))
@@ -166,7 +180,9 @@ export default function CreatePage({ gift }) {
   }
 
   const startOver = () => {
+    setFormRevision((revision) => revision + 1)
     setData(gift.empty())
+    setSettings({ ...EMPTY_SETTINGS })
     setLinks(null)
     setSaved(null)
     storeSaved(gift.type, null)
@@ -200,7 +216,7 @@ export default function CreatePage({ gift }) {
           return (
             <li key={s.id} className={`step${i === stepIndex ? ' is-current' : ''}${i < stepIndex ? ' is-done' : ''}`}>
               {reachable ? (
-                <button type="button" onClick={() => goTo(s.id)}>
+                <button type="button" onClick={() => goTo(s.id)} disabled={busy}>
                   <span className="step-num">{String(i + 1).padStart(2, '0')}</span> {s.label}
                 </button>
               ) : (
@@ -217,7 +233,8 @@ export default function CreatePage({ gift }) {
 
       {step === 'write' && !opening && (
         <form className="create-form" onSubmit={onPreview} noValidate>
-          <Form value={data} onChange={setData} />
+          <Form key={formRevision} value={data} onChange={setData} />
+          <GiftOptions value={settings} onChange={setSettings} />
           <div className="create-actions">
             <button type="submit" className="btn btn-primary">
               Preview <span className="arrow" aria-hidden="true">→</span>
@@ -242,7 +259,7 @@ export default function CreatePage({ gift }) {
             <button type="button" className="btn btn-primary" onClick={onCreate} disabled={busy}>
               {busy ? 'Saving…' : saved ? 'Save changes' : 'Looks right, get the link'}
             </button>
-            <button type="button" className="btn btn-line" onClick={() => goTo('write')}>
+            <button type="button" className="btn btn-line" onClick={() => goTo('write')} disabled={busy}>
               Back to editing
             </button>
             <p className="form-error" role="alert">
@@ -257,6 +274,7 @@ export default function CreatePage({ gift }) {
           {Extras && <Extras data={ready(gift, data)} />}
         </SharePanel>
       )}
+      {saved && !opening && <ReplyInbox key={saved.id} saved={saved} />}
     </div>
   )
 }

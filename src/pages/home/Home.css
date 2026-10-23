@@ -722,3 +722,4 @@ html:not(.is-ready) .floater {
     color: var(--ink-faint);
   }
 }
+.bundle-invitation { padding-block: 24px; text-align: center; }

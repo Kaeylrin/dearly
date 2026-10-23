@@ -5,12 +5,13 @@ import { downloadBlob } from '../../lib/media'
 import BouquetArt, { FlowerIcon } from './BouquetArt'
 import { FLOWERS, MAX_FLOWERS, PAPERS, RIBBONS, WRAP_STYLES, parseFlower, usesPaper } from './options'
 import './bouquet.css'
+import { FLOWER_SLOTS, cleanPositions, placeFlower, shuffledPositions } from './placement'
 
 const LIMITS = { note: 200, from: 60 }
 const ids = (list) => list.map((x) => x[0])
 
 /* The props BouquetArt needs, from gift data. */
-const art = (d) => ({ flowers: d.flowers, wrap: d.wrap, paper: d.paper, ribbon: d.ribbon })
+const art = (d) => ({ flowers: d.flowers, positions: d.positions, wrap: d.wrap, paper: d.paper, ribbon: d.ribbon })
 
 function empty() {
   return {
@@ -27,6 +28,7 @@ function clean(d = {}) {
   // Links made before wrap styles existed stored the paper colour in `wrap`.
   const legacyPaper = ids(PAPERS).includes(d.wrap) ? d.wrap : null
   return {
+    positions: cleanPositions(d.positions, list(d.flowers, MAX_FLOWERS).map(parseFlower).filter(Boolean).length),
     flowers: list(d.flowers, MAX_FLOWERS)
       .map(parseFlower)
       .filter(Boolean)
@@ -62,18 +64,33 @@ function ColorChoices({ legend, name, options, value, onChange }) {
 }
 
 function Form({ value, onChange }) {
+  const [selected, setSelected] = useState(null)
   // The colour each flower will be added in; starts at each flower's first colour.
   const [tones, setTones] = useState(() => Object.fromEntries(FLOWERS.map((f) => [f.kind, f.colors[0][0]])))
   const set = (patch) => onChange({ ...value, ...patch })
   const full = value.flowers.length >= MAX_FLOWERS
-  const add = (kind) => !full && set({ flowers: [...value.flowers, `${kind}:${tones[kind]}`] })
-  const removeAt = (i) => set({ flowers: value.flowers.filter((_, j) => j !== i) })
+  const positions = cleanPositions(value.positions, value.flowers.length)
+  const add = (kind) => {
+    if (full) return
+    const flowers = [...value.flowers, `${kind}:${tones[kind]}`]
+    set({ flowers, positions: cleanPositions(positions, flowers.length) })
+    setSelected(flowers.length - 1)
+  }
+  const removeAt = (i) => {
+    set({ flowers: value.flowers.filter((_, j) => j !== i), positions: positions.filter((_, j) => j !== i) })
+    setSelected(null)
+  }
   const sample = value.flowers.length ? value.flowers.slice(0, 5) : empty().flowers
 
   return (
     <div className="bq-builder">
       <div className="bq-stage">
-        <BouquetArt {...art(value)} />
+        <div className="bq-arrangement">
+          <BouquetArt {...art(value)} />
+          <div className="bq-placement" aria-label="Choose a spot for your selected flower">
+            {FLOWER_SLOTS.map(([x, y], slot) => <button type="button" key={slot} className="bq-spot" style={{ left: `${(x - 40) / 320 * 100}%`, top: `${(y - 40) / 420 * 100}%` }} disabled={selected === null} aria-label={`Place selected flower in spot ${slot + 1}`} onClick={() => { set({ positions: placeFlower(positions, selected, slot) }); setSelected(null) }}>{slot + 1}</button>)}
+          </div>
+        </div>
         <p className="bq-count" aria-live="polite">
           {value.flowers.length} of {MAX_FLOWERS} stems
         </p>
@@ -83,7 +100,7 @@ function Form({ value, onChange }) {
         <fieldset className="bq-palette">
           <legend className="field-label">
             <span>Add flowers</span>
-            <span className="field-hint">Pick a colour, then tap to add</span>
+            <span className="field-hint">Tap a flower, then a numbered spot</span>
           </legend>
           <div className="bq-palette-grid">
             {FLOWERS.map((f) => {
@@ -127,7 +144,7 @@ function Form({ value, onChange }) {
         {value.flowers.length > 0 && (
           <div className="bq-current">
             <p className="field-label">In the bouquet</p>
-            <ul className="bq-chips">
+            <ul className="bq-chips" aria-label="Flowers in your bouquet">
               {value.flowers.map((v, i) => {
                 const p = parseFlower(v)
                 return (
@@ -135,17 +152,21 @@ function Form({ value, onChange }) {
                     <button
                       type="button"
                       className="bq-chip"
-                      onClick={() => removeAt(i)}
-                      aria-label={`Remove ${p.def.colors.length > 1 ? p.colorLabel.toLowerCase() + ' ' : ''}${p.def.label.toLowerCase()}`}
+                      onClick={() => setSelected(selected === i ? null : i)}
+                      aria-pressed={selected === i}
+                      aria-label={`Select ${p.def.colors.length > 1 ? p.colorLabel.toLowerCase() + ' ' : ''}${p.def.label.toLowerCase()} ${i + 1}`}
+                      title={`${p.colorLabel} ${p.def.label.toLowerCase()}`}
                     >
                       <FlowerIcon value={v} />
-                      <span aria-hidden="true">×</span>
                     </button>
                   </li>
                 )
               })}
             </ul>
-            <button type="button" className="btn btn-quiet btn-sm" onClick={() => set({ flowers: [] })}>
+            <p role="status" className="form-note">{selected !== null ? 'Choose a spot on the bouquet, or remove this flower.' : 'Tap a flower to move or remove it.'}</p>
+            {selected !== null && <button type="button" className="btn btn-line btn-sm" onClick={() => removeAt(selected)}>Remove flower</button>}
+            <button type="button" className="btn btn-line btn-sm" onClick={() => { set({ positions: shuffledPositions(value.flowers.length) }); setSelected(null) }}>Shuffle flowers</button>
+            <button type="button" className="btn btn-quiet btn-sm" onClick={() => { set({ flowers: [], positions: [] }); setSelected(null) }}>
               Clear flowers
             </button>
           </div>
@@ -182,7 +203,7 @@ function Form({ value, onChange }) {
           hint="Optional"
           multiline
           rows={3}
-          placeholder="These never wilt. Neither does this."
+          placeholder="Write your own note"
           value={value.note}
           onChange={(v) => set({ note: v })}
           max={LIMITS.note}

@@ -54,9 +54,8 @@ function check(d) {
 }
 
 export function formatDate(iso) {
-  const [y, m, d] = iso.split('-').map(Number)
-  // Built from parts so the date never shifts with the viewer's timezone.
-  return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(y, m - 1, d))
+  // Local noon preserves the calendar date, including years below 100.
+  return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(`${iso}T12:00:00`))
 }
 
 function PhotoInput({ entry, onPhoto, photosUsed }) {
@@ -149,7 +148,7 @@ function Form({ value, onChange }) {
           Add a memory
         </AddButton>
         <p className="form-note">
-          Memories are sorted by date when she opens it. Photos are made smaller so they fit inside the link (up to {MAX_PHOTOS}).
+          Memories are sorted by date when she opens it. Photos are made smaller so they load quickly (up to {MAX_PHOTOS}).
         </p>
       </div>
       <TextField label="From" hint="Optional" placeholder="Your name" value={value.from} onChange={(v) => onChange({ ...value, from: v })} max={LIMITS.from} />

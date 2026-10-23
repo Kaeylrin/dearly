@@ -64,6 +64,7 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="wrap bundle-invitation"><p>Have more than one thing to say?</p><Link to="/bundle/new" className="text-link">Make a gift bundle →</Link></section>
       <section id="gifts" className="gifts wrap" aria-labelledby="gifts-title">
         <div className="gifts-head" ref={headRef} data-reveal>
           <h2 id="gifts-title" className="eyebrow">

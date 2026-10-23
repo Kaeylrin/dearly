@@ -24,6 +24,14 @@ const loaders = {
   quiz: () => import('./quiz'),
 }
 
+loaders.bundle = async () => {
+  const [{ default: makeBundle }, entries] = await Promise.all([
+    import('./bundle'),
+    Promise.all(Object.entries(loaders).filter(([type]) => type !== 'bundle').map(async ([type, loader]) => [type, (await loader()).default])),
+  ])
+  return { default: makeBundle(Object.fromEntries(entries)) }
+}
+
 export const giftTypes = Object.keys(loaders)
 
 export function loadGift(type) {

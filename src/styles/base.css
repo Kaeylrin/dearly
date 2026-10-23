@@ -7,16 +7,6 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-padding-top: 110px;
-  scroll-behavior: smooth;
-}
-
-/* Lenis drives scrolling itself; native smooth scrolling would fight it. */
-html.lenis-on {
-  scroll-behavior: auto;
-}
-
-html.lenis-on.lenis-stopped {
-  overflow: hidden;
 }
 
 body {
